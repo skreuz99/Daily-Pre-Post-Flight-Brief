@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Daily Brief" />
+<title>Daily Pre & Post Flight Brief</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f0f4f8; --surface: rgba(255,255,255,0.95); --border: #d1d9e0;
+    --text: #1a2332; --muted: #64748b; --subtle: #94a3b8;
+    --amber: #d97706; --amber-dark: #b45309;
+    --indigo: #4f46e5; --indigo-dark: #3730a3;
+    --slate: #475569;
+    --font-display: 'Oswald', sans-serif; --font-body: 'DM Sans', sans-serif;
+  }
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-body); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+  body { min-height: 100vh; min-height: -webkit-fill-available; background: linear-gradient(150deg, #dde8f5 0%, #f0f4f8 40%, #e8eef7 100%); padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+  .grid-overlay { position: fixed; inset: 0; pointer-events: none; z-index: 0; background-image: linear-gradient(rgba(99,102,241,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.04) 1px, transparent 1px); background-size: 40px 40px; }
+  .glow { position: fixed; top: -20%; left: 50%; transform: translateX(-50%); width: 60vw; height: 40vh; pointer-events: none; z-index: 0; transition: background 0.4s ease; }
+  .glow.morning { background: radial-gradient(ellipse, rgba(217,119,6,0.08) 0%, transparent 70%); }
+  .glow.evening { background: radial-gradient(ellipse, rgba(79,70,229,0.08) 0%, transparent 70%); }
+  .app { max-width: 680px; margin: 0 auto; padding: 2rem 1.25rem 4rem; position: relative; z-index: 1; }
+  .header { text-align: center; margin-bottom: 2rem; }
+  .header-eyebrow { font-family: var(--font-display); font-size: 0.6rem; letter-spacing: 0.3em; text-transform: uppercase; color: #94a3b8; margin-bottom: 0.4rem; }
+  .header-title { font-family: var(--font-display); font-size: 2.4rem; font-weight: 700; letter-spacing: 0.05em; color: #1a2332; line-height: 1.1; }
+  .header-date { font-family: var(--font-display); font-size: 0.6rem; letter-spacing: 0.2em; color: #94a3b8; margin-top: 0.3rem; text-transform: uppercase; }
+  .mode-toggle { display: flex; background: rgba(255,255,255,0.7); border: 1px solid var(--border); border-radius: 6px; padding: 4px; margin-bottom: 1.5rem; gap: 4px; }
+  .mode-btn { flex: 1; padding: 0.65rem; border: none; border-radius: 4px; font-family: var(--font-display); font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; background: transparent; color: var(--muted); font-weight: 400; }
+  .mode-btn.active-morning { background: linear-gradient(135deg, var(--amber), var(--amber-dark)); color: #fff; font-weight: 600; }
+  .mode-btn.active-evening { background: linear-gradient(135deg, var(--indigo), var(--indigo-dark)); color: #fff; font-weight: 600; }
+  .form { display: flex; flex-direction: column; gap: 1rem; }
+  .field label { display: block; font-family: var(--font-display); font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--slate); margin-bottom: 0.45rem; }
+  textarea, input[type="password"], input[type="text"] { width: 100%; background: rgba(255,255,255,0.9); border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem 1rem; color: var(--text); font-family: var(--font-body); font-size: 0.9rem; line-height: 1.6; resize: vertical; outline: none; transition: border-color 0.2s; -webkit-appearance: none; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  textarea:focus, input:focus { border-color: var(--slate); }
+  textarea::placeholder, input::placeholder { color: #b0bec5; }
+  .btn-generate { width: 100%; padding: 1rem; border: none; border-radius: 6px; font-family: var(--font-display); font-size: 0.82rem; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-top: 0.5rem; color: #fff; }
+  .btn-generate.morning { background: linear-gradient(135deg, var(--amber), var(--amber-dark)); }
+  .btn-generate.evening { background: linear-gradient(135deg, var(--indigo), var(--indigo-dark)); }
+  .btn-generate:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+  .btn-row { display: flex; gap: 0.75rem; margin-top: 0.75rem; }
+  .btn-secondary { flex: 1; padding: 0.75rem; border-radius: 6px; font-family: var(--font-display); font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; background: rgba(255,255,255,0.7); border: 1px solid var(--border); color: var(--muted); }
+  .btn-regen-morning { border-color: rgba(217,119,6,0.4); color: var(--amber); }
+  .btn-regen-evening { border-color: rgba(79,70,229,0.4); color: var(--indigo); }
+  .brief-card { border-radius: 8px; padding: 1.8rem; margin-bottom: 0.75rem; background: rgba(255,255,255,0.95); }
+  .brief-card.morning { border: 1px solid rgba(217,119,6,0.25); box-shadow: 0 4px 20px rgba(217,119,6,0.08); }
+  .brief-card.evening { border: 1px solid rgba(79,70,229,0.25); box-shadow: 0 4px 20px rgba(79,70,229,0.08); }
+  .brief-header { font-family: var(--font-display); font-size: 0.58rem; letter-spacing: 0.3em; padding-bottom: 0.8rem; margin-bottom: 1rem; text-transform: uppercase; }
+  .brief-header.morning { color: var(--amber); border-bottom: 1px solid rgba(217,119,6,0.2); }
+  .brief-header.evening { color: var(--indigo); border-bottom: 1px solid rgba(79,70,229,0.2); }
+  .brief-section-title { font-family: var(--font-display); font-size: 0.72rem; letter-spacing: 0.15em; text-transform: uppercase; margin-top: 1.2rem; margin-bottom: 0.3rem; }
+  .brief-section-title.morning { color: var(--amber); }
+  .brief-section-title.evening { color: var(--indigo); }
+  .brief-line { color: #334155; font-size: 0.92rem; line-height: 1.7; }
+  .brief-spacer { height: 0.5rem; }
+  .loading-wrap { display: flex; flex-direction: column; align-items: center; gap: 1rem; padding: 3rem 0; }
+  .spinner { width: 36px; height: 36px; border: 2px solid var(--border); border-radius: 50%; border-top-color: var(--amber); animation: spin 0.8s linear infinite; }
+  .spinner.evening { border-top-color: var(--indigo); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-family: var(--font-display); font-size: 0.65rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--muted); }
+  .footer { text-align: center; margin-top: 2.5rem; font-family: var(--font-display); font-size: 0.5rem; letter-spacing: 0.25em; color: #b0bec5; text-transform: uppercase; }
+  /* SETUP SCREEN */
+  .setup-card { background: rgba(255,255,255,0.95); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+  .setup-icon { font-size: 2.5rem; margin-bottom: 1rem; }
+  .setup-card h2 { font-family: var(--font-display); font-size: 1.1rem; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.6rem; color: #1a2332; }
+  .setup-card p { color: var(--muted); font-size: 0.85rem; line-height: 1.6; margin-bottom: 1.25rem; }
+  .setup-card .field { text-align: left; }
+  .btn-save { width: 100%; padding: 0.9rem; background: linear-gradient(135deg, var(--indigo), var(--indigo-dark)); border: none; border-radius: 6px; color: #fff; font-family: var(--font-display); font-size: 0.78rem; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 600; cursor: pointer; margin-top: 0.5rem; }
+  .setup-note { font-size: 0.75rem; color: #94a3b8; margin-top: 1rem; line-height: 1.5; }
+  .reset-key { font-family: var(--font-display); font-size: 0.55rem; letter-spacing: 0.15em; text-transform: uppercase; color: #94a3b8; background: none; border: none; cursor: pointer; margin-top: 1.5rem; text-decoration: underline; display: block; margin-left: auto; margin-right: auto; }
+</style>
+</head>
+<body>
+<div class="grid-overlay"></div>
+<div class="glow morning" id="glow"></div>
+<div class="app">
+  <div class="header">
+    <div class="header-eyebrow">Daily Ops Center</div>
+    <div class="header-title">DAILY PRE & POST<br>FLIGHT BRIEF</div>
+    <div class="header-date" id="headerDate"></div>
+  </div>
+  <div id="appContent"></div>
+  <div class="footer">Sean's Ops Center • Powered by Claude</div>
+</div>
+
+<script>
+const SYSTEM_PROMPT = `You are Sean's personal daily briefing assistant. Sean is an airline pilot based in Quakertown, PA. He's an Air Force veteran. He owns three late-1990s Sea-Doos used at the Jersey Shore. He runs a lean AI-native marketing agency on the side. He values efficiency, tactical clarity, and directness.
+
+MORNING BRIEF: Crisp, mission-focused. Prioritize tasks by impact. Call out conflicts or time crunches. Give a one-line mission objective for the day. End with a direct, grounded close — not cheesy.
+
+EVENING BRIEF (Shutdown Ritual): Review what was accomplished. Honestly assess what didn't get done. Preview tomorrow's key priorities. End with a clean wheels-down sign-off.
+
+Format in clean sections with emoji headers. Be concise — Sean is a pilot, he appreciates brevity. Mission briefing tone, not a wellness app.`;
+
+let mode = 'morning';
+let loading = false;
+let generated = false;
+let briefText = '';
+
+document.getElementById('headerDate').textContent =
+  new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' }).toUpperCase();
+
+function getKey() { return localStorage.getItem('sb_api_key'); }
+function saveKey(k) { localStorage.setItem('sb_api_key', k); }
+function clearKey() { localStorage.removeItem('sb_api_key'); }
+
+function setMode(m) {
+  mode = m; generated = false; briefText = '';
+  document.getElementById('glow').className = 'glow ' + m;
+  render();
+}
+
+function render() {
+  const content = document.getElementById('appContent');
+  if (!getKey()) { renderSetup(); return; }
+  if (loading) { renderLoading(); return; }
+  if (generated) { renderBriefScreen(); return; }
+  renderForm();
+}
+
+function renderSetup() {
+  const content = document.getElementById('appContent');
+  content.innerHTML = `
+    <div class="setup-card">
+      <div class="setup-icon">🔑</div>
+      <h2>One-Time Setup</h2>
+      <p>Enter your Anthropic API key to activate your Flight Brief. It saves to this device only — never stored anywhere else.</p>
+      <div class="field">
+        <label>Anthropic API Key</label>
+        <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-..." />
+      </div>
+      <button class="btn-save" onclick="handleSaveKey()">🛫 Activate Flight Brief</button>
+      <p class="setup-note">Get your key at console.anthropic.com → API Keys. Usage for daily briefs costs pennies per month.</p>
+    </div>`;
+}
+
+function handleSaveKey() {
+  const val = document.getElementById('apiKeyInput')?.value?.trim();
+  if (!val || !val.startsWith('sk-')) {
+    alert('Please enter a valid API key starting with sk-');
+    return;
+  }
+  saveKey(val);
+  render();
+}
+
+function renderLoading() {
+  document.getElementById('appContent').innerHTML = `
+    <div class="loading-wrap">
+      <div class="spinner ${mode}"></div>
+      <div class="loading-text">${mode === 'morning' ? 'Preparing your mission briefing...' : 'Running shutdown ritual...'}</div>
+    </div>`;
+}
+
+function renderBriefScreen() {
+  const content = document.getElementById('appContent');
+  content.innerHTML = `
+    <div class="brief-card ${mode}">
+      <div class="brief-header ${mode}">
+        ${mode === 'morning' ? '▶ MORNING BRIEF — CLEARED FOR DEPARTURE' : '▶ SHUTDOWN RITUAL — WHEELS DOWN'}
+      </div>
+      <div class="brief-body" id="briefBody"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-secondary" onclick="resetForm()">← New Brief</button>
+      <button class="btn-secondary ${mode==='morning'?'btn-regen-morning':'btn-regen-evening'}" onclick="regenerate()">↻ Regenerate</button>
+    </div>
+    <button class="reset-key" onclick="handleResetKey()">Reset API Key</button>`;
+  const emojiRegex = /^[🌅🌙✈️📋⚡🎯🔍📌🏁✅❌⚠️🛬🛫🗒️💡🔥👊]/u;
+  document.getElementById('briefBody').innerHTML = briefText.split('\n').map(line => {
+    if (!line.trim()) return '<div class="brief-spacer"></div>';
+    if (emojiRegex.test(line.trim())) return `<div class="brief-section-title ${mode}">${line}</div>`;
+    return `<div class="brief-line">${line.replace(/\*\*(.*?)\*\*/g,'<strong style="color:#1a2332">$1</strong>')}</div>`;
+  }).join('');
+}
+
+function renderForm() {
+  const content = document.getElementById('appContent');
+  const isEvening = mode === 'evening';
+  content.innerHTML = `
+    <div class="mode-toggle">
+      <button class="mode-btn ${mode==='morning'?'active-morning':''}" onclick="setMode('morning')">🌅 Morning Brief</button>
+      <button class="mode-btn ${mode==='evening'?'active-evening':''}" onclick="setMode('evening')">🌙 Evening Shutdown</button>
+    </div>
+    <div class="form">
+      <div class="field">
+        <label>${isEvening ? "📅 Tomorrow's Calendar / Flights" : "📅 Today's Calendar / Flights"}</label>
+        <textarea id="calEvents" rows="3" placeholder="${isEvening ? 'e.g. 0530 show time, 0730 PHL→MIA turn, home by 1500' : 'e.g. 0600 preflight, 0800 DCA→ORD, 1400 sim, 1800 free'}"></textarea>
+      </div>
+      <div class="field">
+        <label>${isEvening ? "📋 What Didn't Get Done Today" : "⚡ Today's Tasks & Priorities"}</label>
+        <textarea id="tasks" rows="3" placeholder="${isEvening ? "e.g. didn't finish wet sanding, skipped gym, still need to call insurance" : 'e.g. wet sand Sea-Doo hull, call insurance, review budget'}"></textarea>
+      </div>
+      ${isEvening ? `<div class="field"><label>✅ What I Accomplished Today</label><textarea id="completed" rows="3" placeholder="e.g. completed DCA→ORD turn, finished wet sanding green Sea-Doo, hit the gym"></textarea></div>` : ''}
+      <div class="field">
+        <label>🗒️ Additional Context / Notes</label>
+        <textarea id="notes" rows="2" placeholder="Anything else — blockers, how you're feeling, things on your mind..."></textarea>
+      </div>
+      <button class="btn-generate ${mode}" onclick="generateBrief()">
+        ${mode === 'morning' ? '🛫 Generate Morning Brief' : '🛬 Run Shutdown Ritual'}
+      </button>
+    </div>
+    <button class="reset-key" onclick="handleResetKey()">Reset API Key</button>`;
+}
+
+function handleResetKey() {
+  if (confirm('Clear saved API key?')) { clearKey(); render(); }
+}
+
+async function generateBrief() {
+  const calEvents = document.getElementById('calEvents')?.value || '';
+  const tasks = document.getElementById('tasks')?.value || '';
+  const completed = document.getElementById('completed')?.value || '';
+  const notes = document.getElementById('notes')?.value || '';
+  const userPrompt = mode === 'morning'
+    ? `Generate my MORNING BRIEF.\n\nCalendar/flights today:\n${calEvents||'None'}\n\nTasks & priorities:\n${tasks||'None'}\n\nNotes:\n${notes||'None'}`
+    : `Generate my EVENING SHUTDOWN BRIEF.\n\nAccomplished today:\n${completed||'Not specified'}\n\nDidn't get done:\n${tasks||'None'}\n\nTomorrow's calendar:\n${calEvents||'None'}\n\nNotes:\n${notes||'None'}`;
+  loading = true; render();
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': getKey(),
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: userPrompt }]
+      })
+    });
+    const data = await response.json();
+    if (data.error) { briefText = `Error: ${data.error.message}`; }
+    else { briefText = data.content?.map(b => b.text||'').join('') || 'Unable to generate brief.'; }
+  } catch(e) {
+    briefText = 'Connection error. Check your internet and try again.';
+  }
+  loading = false; generated = true; render();
+}
+
+function regenerate() { generated = false; render(); setTimeout(() => generateBrief(), 100); }
+function resetForm() { generated = false; briefText = ''; render(); }
+
+render();
+</script>
+</body>
+</html>
