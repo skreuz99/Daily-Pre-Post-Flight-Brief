@@ -15,6 +15,7 @@
     --text: #1a2332; --muted: #64748b; --subtle: #94a3b8;
     --amber: #d97706; --amber-dark: #b45309;
     --indigo: #4f46e5; --indigo-dark: #3730a3;
+    --green: #059669; --green-dark: #047857;
     --slate: #475569;
     --font-display: 'Oswald', sans-serif; --font-body: 'DM Sans', sans-serif;
   }
@@ -63,7 +64,6 @@
   @keyframes spin { to { transform: rotate(360deg); } }
   .loading-text { font-family: var(--font-display); font-size: 0.65rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--muted); }
   .footer { text-align: center; margin-top: 2.5rem; font-family: var(--font-display); font-size: 0.5rem; letter-spacing: 0.25em; color: #b0bec5; text-transform: uppercase; }
-  /* SETUP SCREEN */
   .setup-card { background: rgba(255,255,255,0.95); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
   .setup-icon { font-size: 2.5rem; margin-bottom: 1rem; }
   .setup-card h2 { font-family: var(--font-display); font-size: 1.1rem; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.6rem; color: #1a2332; }
@@ -72,6 +72,43 @@
   .btn-save { width: 100%; padding: 0.9rem; background: linear-gradient(135deg, var(--indigo), var(--indigo-dark)); border: none; border-radius: 6px; color: #fff; font-family: var(--font-display); font-size: 0.78rem; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 600; cursor: pointer; margin-top: 0.5rem; }
   .setup-note { font-size: 0.75rem; color: #94a3b8; margin-top: 1rem; line-height: 1.5; }
   .reset-key { font-family: var(--font-display); font-size: 0.55rem; letter-spacing: 0.15em; text-transform: uppercase; color: #94a3b8; background: none; border: none; cursor: pointer; margin-top: 1.5rem; text-decoration: underline; display: block; margin-left: auto; margin-right: auto; }
+
+  /* CHECKLIST STYLES */
+  .checklist-card { background: rgba(255,255,255,0.95); border-radius: 8px; padding: 1.5rem; margin-bottom: 0.75rem; border: 1px solid rgba(5,150,105,0.25); box-shadow: 0 4px 20px rgba(5,150,105,0.06); }
+  .checklist-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.8rem; border-bottom: 1px solid rgba(5,150,105,0.15); }
+  .checklist-title { font-family: var(--font-display); font-size: 0.58rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--green); }
+  .checklist-progress { font-family: var(--font-display); font-size: 0.6rem; letter-spacing: 0.1em; color: var(--muted); }
+  .checklist-items { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; }
+  .checklist-item { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.6rem 0.75rem; border-radius: 6px; cursor: pointer; transition: all 0.2s; border: 1px solid transparent; background: rgba(248,250,252,0.8); }
+  .checklist-item:hover { background: rgba(5,150,105,0.04); border-color: rgba(5,150,105,0.15); }
+  .checklist-item.done { background: rgba(5,150,105,0.06); border-color: rgba(5,150,105,0.15); }
+  .check-box { width: 20px; height: 20px; border-radius: 4px; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; transition: all 0.2s; background: #fff; }
+  .checklist-item.done .check-box { background: var(--green); border-color: var(--green); }
+  .check-icon { color: #fff; font-size: 0.7rem; font-weight: 700; display: none; }
+  .checklist-item.done .check-icon { display: block; }
+  .check-text { font-size: 0.88rem; color: #334155; line-height: 1.5; flex: 1; }
+  .checklist-item.done .check-text { color: #94a3b8; text-decoration: line-through; }
+  .check-tag { font-family: var(--font-display); font-size: 0.5rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.15rem 0.4rem; border-radius: 3px; flex-shrink: 0; margin-top: 3px; }
+  .tag-high { background: rgba(220,38,38,0.1); color: #dc2626; }
+  .tag-med { background: rgba(217,119,6,0.1); color: var(--amber); }
+  .tag-low { background: rgba(71,85,105,0.1); color: var(--slate); }
+  .tag-added { background: rgba(79,70,229,0.1); color: var(--indigo); }
+
+  /* ADD TASK */
+  .add-task-row { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
+  .add-task-input { flex: 1; padding: 0.6rem 0.85rem; background: rgba(255,255,255,0.9); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: var(--font-body); font-size: 0.88rem; outline: none; -webkit-appearance: none; }
+  .add-task-input:focus { border-color: var(--green); }
+  .btn-add-task { padding: 0.6rem 1rem; background: linear-gradient(135deg, var(--green), var(--green-dark)); border: none; border-radius: 6px; color: #fff; font-family: var(--font-display); font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; white-space: nowrap; font-weight: 600; }
+
+  /* ROLLED ITEMS PREVIEW */
+  .rolled-preview { background: rgba(255,255,255,0.8); border: 1px solid rgba(217,119,6,0.2); border-radius: 6px; padding: 0.75rem 1rem; margin-top: 0.75rem; }
+  .rolled-label { font-family: var(--font-display); font-size: 0.55rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--amber); margin-bottom: 0.4rem; }
+  .rolled-item { font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
+
+  /* ERROR STATE */
+  .error-card { background: rgba(255,255,255,0.95); border: 1px solid rgba(220,38,38,0.25); border-radius: 8px; padding: 1.5rem; text-align: center; }
+  .error-title { font-family: var(--font-display); font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; color: #dc2626; margin-bottom: 0.5rem; }
+  .error-msg { font-size: 0.85rem; color: var(--muted); line-height: 1.6; margin-bottom: 1rem; }
 </style>
 </head>
 <body>
@@ -101,10 +138,9 @@ const SYSTEM_PROMPT = `You are Sean's personal daily briefing assistant. You kno
 ## HIS BUSINESS
 - Company: KND Marketing, LLC | Website: PhillySEO.ai
 - AI-native marketing agency — lean stack, high margins
-- Current clients: real estate lead generation (Bucks County)
+- Current clients: real estate lead generation (Bucks County), Penn Flight Academy
 - Active relationship with Abby at iMark Infotech (ongoing)
 - Building rank-and-rent local SEO lead generation sites
-- Connected to Penn Flight Academy (Quakertown airport)
 - NEXT PHASE: appointment setting and actively building the client list — this is the growth lever
 - Operating philosophy: MASSIVE IMPERFECT ACTION. Done beats perfect. Stop being in the middle.
 - Offer reframe: "I don't just sell leads or a website — I build you a system that gets you time."
@@ -114,36 +150,43 @@ const SYSTEM_PROMPT = `You are Sean's personal daily briefing assistant. You kno
 - MEI checkride on hold (Beechcraft Duchess BE-76) — date TBD
 - FIRC in progress — personal goal: complete by June 15. Hard deadline: June 28 (must finish a few days before June 30 expiry)
 - Departure language: use "Out-the-door time" or "Van time" — NOT "Wheels Up" (reserve for actual rotation)
+- Out-the-door standard: 2.5 hours before departure. Always calculate and flag this in flight day briefs.
 
 ## SEA-DOOS (4 total — Jersey Shore use)
-- #1: Nearly mission-ready (carb work complete)
+- #1: Mission ready
 - #2: Close behind #1
 - #3: Carbs rebuilt, ready for reinstall
-- #4: New motor on bench, old motor removal/reinstall is last in sequence (most time-intensive)
-- Trailers: one 2-place, two singles (one homebuilt) — plan to sell both singles and buy a second 2-place trailer
+- #4: New motor on bench, old motor removal/reinstall is last in sequence
+- Trailers: one 2-place, two singles (one homebuilt) — plan to sell both singles, buy a second 2-place
 
 ## ACTIVE PROJECT THREADS
 - Sea-Doo prep for shore season (primary weekend ops)
 - Shop cleanup (multi-week, ongoing)
-- Home projects: back room reassembly, curtain rods, hope chest, Mom's door hanger
-- Kara's drawers — nearly done
-- Jeep: armrest epoxy repair, BedRug supplier contact pending
+- Home projects: back room (nearly complete), curtain rods, Mom's door hanger
+- Jeep: maintenance as needed
 
 ## OPERATING STANDARDS
 - Hard stops at 1700 on called shutdown days — hold him to it
 - Business development gets a non-negotiable daily block — flag if it's missing
-- Intentional downtime is a scheduled mission item, not an afterthought (per Ben's feedback)
-- Carb work and shop projects expand to fill time — set time boxes
-- 72-hour ops are normal on weekends — sequence across days, don't overstack one day
-- Flag when business items (client outreach, buyers guide, appointments) keep rolling without execution
+- Intentional downtime is a scheduled mission item (per Ben's feedback)
+- Flag when business items keep rolling without execution
 - Brief language: military/aviation tone. BLUF. No fluff. Not a wellness app.
-- "Massive imperfect action" is the operating philosophy — call it out when he's hesitating
+- "Massive imperfect action" is the operating philosophy
+
+## CHECKLIST INSTRUCTIONS
+When generating a brief, end your response with a special section formatted EXACTLY like this — it will be parsed to build the interactive checklist:
+
+CHECKLIST:
+[HIGH] Task description here
+[HIGH] Another high priority task
+[MED] Medium priority task
+[LOW] Low priority or optional task
+
+Only include actionable tasks (not observations or notes). 5-10 items max. Pull from the priority stack in the brief. Use HIGH/MED/LOW only.
 
 ## BRIEF FORMATS
-
-MORNING BRIEF: Mission objective first. Priority stack by impact. Flag conflicts and time crunches. Call out any business development items. End with a direct send-off — grounded, not cheesy.
-
-EVENING SHUTDOWN: Honest debrief — what got done, what rolled and why. Preview tomorrow's priorities. Flag anything that's been rolling more than 2 days. End with a clean wheels-down sign-off.
+MORNING BRIEF: Mission objective first. Priority stack by impact. Flag conflicts and time crunches. Call out business development items. End with direct send-off. Then add CHECKLIST section.
+EVENING SHUTDOWN: Honest debrief — what got done, what rolled and why. Preview tomorrow. Flag items rolling more than 2 days. Wheels-down sign-off. Then add CHECKLIST section for tomorrow's known items if applicable.
 
 Format with emoji section headers. Concise. Sharp. Mission briefing, not a journal.`;
 
@@ -151,6 +194,8 @@ let mode = 'morning';
 let loading = false;
 let generated = false;
 let briefText = '';
+let checklistItems = [];
+let errorMsg = '';
 
 document.getElementById('headerDate').textContent =
   new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' }).toUpperCase();
@@ -158,9 +203,14 @@ document.getElementById('headerDate').textContent =
 function getKey() { return localStorage.getItem('sb_api_key'); }
 function saveKey(k) { localStorage.setItem('sb_api_key', k); }
 function clearKey() { localStorage.removeItem('sb_api_key'); }
+function saveChecklist() { localStorage.setItem('sb_checklist', JSON.stringify(checklistItems)); }
+function loadChecklist() {
+  try { checklistItems = JSON.parse(localStorage.getItem('sb_checklist') || '[]'); }
+  catch(e) { checklistItems = []; }
+}
 
 function setMode(m) {
-  mode = m; generated = false; briefText = '';
+  mode = m; generated = false; briefText = ''; errorMsg = '';
   document.getElementById('glow').className = 'glow ' + m;
   render();
 }
@@ -169,34 +219,30 @@ function render() {
   const content = document.getElementById('appContent');
   if (!getKey()) { renderSetup(); return; }
   if (loading) { renderLoading(); return; }
+  if (errorMsg) { renderError(); return; }
   if (generated) { renderBriefScreen(); return; }
   renderForm();
 }
 
 function renderSetup() {
-  const content = document.getElementById('appContent');
-  content.innerHTML = `
+  document.getElementById('appContent').innerHTML = `
     <div class="setup-card">
       <div class="setup-icon">🔑</div>
       <h2>One-Time Setup</h2>
-      <p>Enter your Anthropic API key to activate your Flight Brief. It saves to this device only — never stored anywhere else.</p>
+      <p>Enter your Anthropic API key to activate your Flight Brief. Saves to this device only.</p>
       <div class="field">
         <label>Anthropic API Key</label>
         <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-..." />
       </div>
       <button class="btn-save" onclick="handleSaveKey()">🛫 Activate Flight Brief</button>
-      <p class="setup-note">Get your key at console.anthropic.com → API Keys. Usage for daily briefs costs pennies per month.</p>
+      <p class="setup-note">Get your key at console.anthropic.com → API Keys.</p>
     </div>`;
 }
 
 function handleSaveKey() {
   const val = document.getElementById('apiKeyInput')?.value?.trim();
-  if (!val || !val.startsWith('sk-')) {
-    alert('Please enter a valid API key starting with sk-');
-    return;
-  }
-  saveKey(val);
-  render();
+  if (!val || !val.startsWith('sk-')) { alert('Please enter a valid API key starting with sk-'); return; }
+  saveKey(val); render();
 }
 
 function renderLoading() {
@@ -207,8 +253,50 @@ function renderLoading() {
     </div>`;
 }
 
+function renderError() {
+  document.getElementById('appContent').innerHTML = `
+    <div class="error-card">
+      <div class="error-title">⚠️ Brief Generation Failed</div>
+      <div class="error-msg">${errorMsg}</div>
+      <div class="btn-row">
+        <button class="btn-secondary" onclick="resetForm()">← Back</button>
+        <button class="btn-secondary btn-regen-${mode}" onclick="retryGenerate()">↻ Try Again</button>
+      </div>
+    </div>
+    <button class="reset-key" onclick="handleResetKey()">Reset API Key</button>`;
+}
+
+function parseChecklist(text) {
+  const lines = text.split('\n');
+  const items = [];
+  let inChecklist = false;
+  for (const line of lines) {
+    if (line.trim() === 'CHECKLIST:') { inChecklist = true; continue; }
+    if (inChecklist && line.trim().startsWith('[')) {
+      const match = line.trim().match(/^\[(HIGH|MED|LOW)\]\s+(.+)$/);
+      if (match) items.push({ id: Date.now() + Math.random(), text: match[2], priority: match[1], done: false, added: false });
+    } else if (inChecklist && line.trim() === '') { continue; }
+    else if (inChecklist) { break; }
+  }
+  return items;
+}
+
+function stripChecklist(text) {
+  const idx = text.indexOf('\nCHECKLIST:');
+  return idx !== -1 ? text.substring(0, idx).trim() : text;
+}
+
+function getRolledItems() {
+  return checklistItems.filter(i => !i.done);
+}
+
 function renderBriefScreen() {
+  loadChecklist();
   const content = document.getElementById('appContent');
+  const done = checklistItems.filter(i => i.done).length;
+  const total = checklistItems.length;
+  const rolled = getRolledItems();
+
   content.innerHTML = `
     <div class="brief-card ${mode}">
       <div class="brief-header ${mode}">
@@ -216,23 +304,93 @@ function renderBriefScreen() {
       </div>
       <div class="brief-body" id="briefBody"></div>
     </div>
+
+    ${checklistItems.length > 0 ? `
+    <div class="checklist-card">
+      <div class="checklist-header">
+        <div class="checklist-title">📋 Today's Ops Checklist</div>
+        <div class="checklist-progress">${done}/${total} complete</div>
+      </div>
+      <div class="checklist-items" id="checklistItems"></div>
+      <div class="add-task-row">
+        <input type="text" class="add-task-input" id="newTaskInput" placeholder="Add a task..." onkeydown="if(event.key==='Enter')addTask()" />
+        <button class="btn-add-task" onclick="addTask()">+ Add</button>
+      </div>
+      ${rolled.length > 0 && mode === 'morning' ? '' : rolled.length > 0 ? `
+      <div class="rolled-preview">
+        <div class="rolled-label">🔄 Rolling to Tomorrow</div>
+        ${rolled.map(i => `<div class="rolled-item">• ${i.text}</div>`).join('')}
+      </div>` : ''}
+    </div>` : `
+    <div class="checklist-card">
+      <div class="checklist-header">
+        <div class="checklist-title">📋 Ops Checklist</div>
+      </div>
+      <div class="add-task-row">
+        <input type="text" class="add-task-input" id="newTaskInput" placeholder="Add a task manually..." onkeydown="if(event.key==='Enter')addTask()" />
+        <button class="btn-add-task" onclick="addTask()">+ Add</button>
+      </div>
+    </div>`}
+
     <div class="btn-row">
       <button class="btn-secondary" onclick="resetForm()">← New Brief</button>
       <button class="btn-secondary ${mode==='morning'?'btn-regen-morning':'btn-regen-evening'}" onclick="regenerate()">↻ Regenerate</button>
     </div>
     <button class="reset-key" onclick="handleResetKey()">Reset API Key</button>`;
-  const emojiRegex = /^[🌅🌙✈️📋⚡🎯🔍📌🏁✅❌⚠️🛬🛫🗒️💡🔥👊]/u;
-  document.getElementById('briefBody').innerHTML = briefText.split('\n').map(line => {
+
+  const emojiRegex = /^[🌅🌙✈️📋⚡🎯🔍📌🏁✅❌⚠️🛬🛫🗒️💡🔥👊☀️🚀🏒⛳🔧💼🚤]/u;
+  document.getElementById('briefBody').innerHTML = stripChecklist(briefText).split('\n').map(line => {
     if (!line.trim()) return '<div class="brief-spacer"></div>';
+    if (line.startsWith('#')) return `<div class="brief-section-title ${mode}">${line.replace(/^#+\s*/, '')}</div>`;
     if (emojiRegex.test(line.trim())) return `<div class="brief-section-title ${mode}">${line}</div>`;
     return `<div class="brief-line">${line.replace(/\*\*(.*?)\*\*/g,'<strong style="color:#1a2332">$1</strong>')}</div>`;
   }).join('');
+
+  renderChecklistItems();
+}
+
+function renderChecklistItems() {
+  const container = document.getElementById('checklistItems');
+  if (!container) return;
+  container.innerHTML = checklistItems.map(item => `
+    <div class="checklist-item ${item.done ? 'done' : ''}" onclick="toggleItem('${item.id}')">
+      <div class="check-box"><span class="check-icon">✓</span></div>
+      <div class="check-text">${item.text}</div>
+      <div class="check-tag ${item.added ? 'tag-added' : item.priority === 'HIGH' ? 'tag-high' : item.priority === 'MED' ? 'tag-med' : 'tag-low'}">
+        ${item.added ? 'added' : item.priority}
+      </div>
+    </div>`).join('');
+}
+
+function toggleItem(id) {
+  const item = checklistItems.find(i => String(i.id) === String(id));
+  if (item) { item.done = !item.done; saveChecklist(); renderChecklistItems(); updateProgress(); }
+}
+
+function updateProgress() {
+  const done = checklistItems.filter(i => i.done).length;
+  const total = checklistItems.length;
+  const el = document.querySelector('.checklist-progress');
+  if (el) el.textContent = `${done}/${total} complete`;
+}
+
+function addTask() {
+  const input = document.getElementById('newTaskInput');
+  if (!input || !input.value.trim()) return;
+  checklistItems.push({ id: Date.now(), text: input.value.trim(), priority: 'MED', done: false, added: true });
+  saveChecklist();
+  input.value = '';
+  renderChecklistItems();
+  updateProgress();
 }
 
 function renderForm() {
-  const content = document.getElementById('appContent');
+  loadChecklist();
+  const rolled = getRolledItems();
   const isEvening = mode === 'evening';
-  content.innerHTML = `
+  const rolledText = rolled.length > 0 ? rolled.map(i => `- ${i.text}`).join('\n') : '';
+
+  document.getElementById('appContent').innerHTML = `
     <div class="mode-toggle">
       <button class="mode-btn ${mode==='morning'?'active-morning':''}" onclick="setMode('morning')">🌅 Morning Brief</button>
       <button class="mode-btn ${mode==='evening'?'active-evening':''}" onclick="setMode('evening')">🌙 Evening Shutdown</button>
@@ -244,13 +402,18 @@ function renderForm() {
       </div>
       <div class="field">
         <label>${isEvening ? "📋 What Didn't Get Done Today" : "⚡ Today's Tasks & Priorities"}</label>
-        <textarea id="tasks" rows="3" placeholder="${isEvening ? "e.g. didn't finish wet sanding, skipped gym, still need to call insurance" : 'e.g. wet sand Sea-Doo hull, call insurance, review budget'}"></textarea>
+        <textarea id="tasks" rows="3" placeholder="${isEvening ? "Items that didn't get done..." : 'e.g. pay iMark invoice, update Penn Flight website, gym, hockey at noon'}"></textarea>
       </div>
-      ${isEvening ? `<div class="field"><label>✅ What I Accomplished Today</label><textarea id="completed" rows="3" placeholder="e.g. completed DCA→ORD turn, finished wet sanding green Sea-Doo, hit the gym"></textarea></div>` : ''}
+      ${isEvening ? `<div class="field"><label>✅ What I Accomplished Today</label><textarea id="completed" rows="3" placeholder="What got done today..."></textarea></div>` : ''}
       <div class="field">
         <label>🗒️ Additional Context / Notes</label>
-        <textarea id="notes" rows="2" placeholder="Anything else — blockers, how you're feeling, things on your mind..."></textarea>
+        <textarea id="notes" rows="2" placeholder="Blockers, context, things on your mind..."></textarea>
       </div>
+      ${rolled.length > 0 ? `
+      <div class="rolled-preview">
+        <div class="rolled-label">🔄 Rolled from Yesterday (auto-included)</div>
+        ${rolled.map(i => `<div class="rolled-item">• ${i.text}</div>`).join('')}
+      </div>` : ''}
       <button class="btn-generate ${mode}" onclick="generateBrief()">
         ${mode === 'morning' ? '🛫 Generate Morning Brief' : '🛬 Run Shutdown Ritual'}
       </button>
@@ -262,15 +425,25 @@ function handleResetKey() {
   if (confirm('Clear saved API key?')) { clearKey(); render(); }
 }
 
+let lastInputs = {};
+
 async function generateBrief() {
+  loadChecklist();
+  const rolled = getRolledItems();
   const calEvents = document.getElementById('calEvents')?.value || '';
   const tasks = document.getElementById('tasks')?.value || '';
   const completed = document.getElementById('completed')?.value || '';
   const notes = document.getElementById('notes')?.value || '';
+  const rolledText = rolled.length > 0 ? '\n\nROLLED FROM YESTERDAY (not yet complete):\n' + rolled.map(i => `- ${i.text}`).join('\n') : '';
+
+  lastInputs = { calEvents, tasks, completed, notes };
+
   const userPrompt = mode === 'morning'
-    ? `Generate my MORNING BRIEF.\n\nCalendar/flights today:\n${calEvents||'None'}\n\nTasks & priorities:\n${tasks||'None'}\n\nNotes:\n${notes||'None'}`
-    : `Generate my EVENING SHUTDOWN BRIEF.\n\nAccomplished today:\n${completed||'Not specified'}\n\nDidn't get done:\n${tasks||'None'}\n\nTomorrow's calendar:\n${calEvents||'None'}\n\nNotes:\n${notes||'None'}`;
-  loading = true; render();
+    ? `Generate my MORNING BRIEF.\n\nCalendar/flights today:\n${calEvents||'None'}\n\nTasks & priorities:\n${tasks||'None'}${rolledText}\n\nNotes:\n${notes||'None'}\n\nAfter the brief, generate the CHECKLIST section.`
+    : `Generate my EVENING SHUTDOWN BRIEF.\n\nAccomplished today:\n${completed||'Not specified'}\n\nDidn't get done:\n${tasks||'None'}${rolledText}\n\nTomorrow's calendar:\n${calEvents||'None'}\n\nNotes:\n${notes||'None'}\n\nAfter the brief, generate the CHECKLIST section for tomorrow's known items.`;
+
+  loading = true; errorMsg = ''; render();
+
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -282,23 +455,64 @@ async function generateBrief() {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-5',
-        max_tokens: 1000,
+        max_tokens: 2500,
         system: SYSTEM_PROMPT,
         messages: [{ role: 'user', content: userPrompt }]
       })
     });
+
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error?.message || `API error ${response.status}`);
+    }
+
     const data = await response.json();
-    if (data.error) { briefText = `Error: ${data.error.message}`; }
-    else { briefText = data.content?.map(b => b.text||'').join('') || 'Unable to generate brief.'; }
+    if (data.error) throw new Error(data.error.message);
+
+    briefText = data.content?.map(b => b.text||'').join('') || '';
+    if (!briefText) throw new Error('Empty response from API. Please try again.');
+
+    // Parse checklist from response
+    const parsed = parseChecklist(briefText);
+    if (parsed.length > 0) {
+      // Clear done items from yesterday, keep only unchecked rolled items + new
+      checklistItems = parsed;
+      saveChecklist();
+    }
+
+    loading = false; generated = true; render();
+
   } catch(e) {
-    briefText = 'Connection error. Check your internet and try again.';
+    loading = false;
+    errorMsg = e.message.includes('invalid_api_key') || e.message.includes('authentication')
+      ? 'Invalid API key. Tap "Reset API Key" below and re-enter your key.'
+      : e.message.includes('rate_limit')
+      ? 'Rate limit hit. Wait 30 seconds and try again.'
+      : e.message.includes('overloaded')
+      ? 'API is busy. Wait a moment and try again.'
+      : `${e.message}. Check your connection and try again.`;
+    render();
   }
-  loading = false; generated = true; render();
 }
 
-function regenerate() { generated = false; render(); setTimeout(() => generateBrief(), 100); }
-function resetForm() { generated = false; briefText = ''; render(); }
+function retryGenerate() {
+  errorMsg = '';
+  // Restore form with last inputs
+  generated = false;
+  render();
+  // Pre-fill fields
+  setTimeout(() => {
+    if (document.getElementById('calEvents')) document.getElementById('calEvents').value = lastInputs.calEvents || '';
+    if (document.getElementById('tasks')) document.getElementById('tasks').value = lastInputs.tasks || '';
+    if (document.getElementById('completed')) document.getElementById('completed').value = lastInputs.completed || '';
+    if (document.getElementById('notes')) document.getElementById('notes').value = lastInputs.notes || '';
+  }, 50);
+}
 
+function regenerate() { generated = false; briefText = ''; render(); setTimeout(() => generateBrief(), 100); }
+function resetForm() { generated = false; briefText = ''; errorMsg = ''; render(); }
+
+loadChecklist();
 render();
 </script>
 </body>
