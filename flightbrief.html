@@ -313,13 +313,12 @@ function renderSetup() {
         <label>Anthropic API Key</label>
         <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-..." />
       </div>
-      <button class="btn-save" onclick="handleSaveKey()">🛫 Activate Flight Brief</button>
       <p class="setup-note">Get your key at console.anthropic.com → API Keys.</p>
     </div>
     <div class="setup-card">
       <div class="setup-icon">☁️</div>
       <h2>Optional: Live Sync</h2>
-      <p>Add Supabase credentials to sync your checklist across desktop and phone in real time. Skip this to use device-only storage.</p>
+      <p>Add Supabase credentials to sync your checklist across desktop and phone in real time. Leave blank to use device-only storage.</p>
       <div class="field">
         <label>Supabase Project URL</label>
         <input type="text" id="supaUrlInput" placeholder="https://xxxxx.supabase.co" />
@@ -328,27 +327,28 @@ function renderSetup() {
         <label>Supabase Anon Key</label>
         <input type="password" id="supaAnonInput" placeholder="eyJhbG..." />
       </div>
-      <button class="btn-save" style="background:linear-gradient(135deg,var(--green),var(--green-dark))" onclick="handleSaveSupa()">☁️ Enable Live Sync</button>
       <p class="setup-note">Get free credentials at supabase.com → New Project → Settings → API</p>
-    </div>`;
+    </div>
+    <button class="btn-save" onclick="handleSaveAll()">🛫 Activate Flight Brief</button>`;
 }
 
-function handleSaveKey() {
-  const val = document.getElementById('apiKeyInput')?.value?.trim();
-  if (!val || !val.startsWith('sk-')) { alert('Please enter a valid API key starting with sk-'); return; }
-  saveKey(val);
+function handleSaveAll() {
+  const apiVal = document.getElementById('apiKeyInput')?.value?.trim();
+  const supaUrl = document.getElementById('supaUrlInput')?.value?.trim();
+  const supaAnon = document.getElementById('supaAnonInput')?.value?.trim();
+
+  if (!apiVal || !apiVal.startsWith('sk-')) { alert('Please enter a valid Anthropic API key starting with sk-'); return; }
+  saveKey(apiVal);
+
+  if (supaUrl && supaAnon) {
+    saveSupaConfig(supaUrl, supaAnon);
+    initSupabase();
+  } else if (supaUrl || supaAnon) {
+    alert('To enable live sync, fill in BOTH the Supabase URL and Anon Key. Leaving both blank is fine too — you can add sync later via "Reset API Key / Sync Settings."');
+  }
+
   loadLocal();
-  render();
-}
-
-function handleSaveSupa() {
-  const url = document.getElementById('supaUrlInput')?.value?.trim();
-  const anon = document.getElementById('supaAnonInput')?.value?.trim();
-  if (!url || !anon) { alert('Enter both Supabase URL and Anon Key, or skip this step.'); return; }
-  saveSupaConfig(url, anon);
-  initSupabase();
-  alert('Live sync enabled! Make sure you create a table called "flightbrief_state" in your Supabase project (see setup notes).');
-  render();
+  init();
 }
 
 // ── LOADING / ERROR ──────────────────────────────────────
