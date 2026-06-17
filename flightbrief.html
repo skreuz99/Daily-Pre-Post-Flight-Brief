@@ -268,22 +268,27 @@ function loadLocal() {
 async function loadFromCloud() {
   if (!supaClient) { loadLocal(); return; }
   try {
-    const { data, error } = await supaClient.from('flightbrief_state').select('*').eq('device_id', deviceId).single();
+    const { data, error } = await supaClient.from('flightbrief_state').select('*').eq('device_id', deviceId).maybeSingle();
+    if (error) { console.error('Supabase load error:', error); loadLocal(); return; }
     if (data) {
       checklistItems = data.checklist || [];
       pushedItems = data.pushed || [];
-    } else { loadLocal(); }
-  } catch(e) { loadLocal(); }
+    } else {
+      // No row yet for this device — that's fine, start fresh and create it on first save
+      loadLocal();
+    }
+  } catch(e) { console.error('Supabase load exception:', e); loadLocal(); }
 }
 
 async function saveToCloud() {
   saveChecklistLocal(); savePushedLocal();
   if (!supaClient) return;
   try {
-    await supaClient.from('flightbrief_state').upsert({
+    const { error } = await supaClient.from('flightbrief_state').upsert({
       device_id: deviceId, checklist: checklistItems, pushed: pushedItems, updated_at: new Date().toISOString()
     }, { onConflict: 'device_id' });
-  } catch(e) { console.error('Cloud sync failed', e); }
+    if (error) { console.error('Supabase save error:', error); alert('Sync save failed: ' + error.message); }
+  } catch(e) { console.error('Cloud sync exception:', e); alert('Sync save failed: ' + e.message); }
 }
 
 // ── MODE / RENDER ROUTER ────────────────────────────────
