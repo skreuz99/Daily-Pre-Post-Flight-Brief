@@ -596,6 +596,19 @@ function renderForm() {
   const isEvening = mode === 'evening';
 
   document.getElementById('appContent').innerHTML = `
+    ${checklistItems.length > 0 ? `
+    <div class="checklist-card">
+      <div class="checklist-header">
+        <div class="checklist-title">📋 Today's Active Checklist</div>
+        <div class="checklist-progress">${checklistItems.filter(i=>i.done).length}/${checklistItems.length} complete</div>
+      </div>
+      <div class="checklist-items" id="checklistItems"></div>
+      <div class="add-task-row">
+        <input type="text" class="add-task-input" id="newTaskInputForm" placeholder="Add a task..." onkeydown="if(event.key==='Enter')addTaskFromForm()" />
+        <button class="btn-add-task" onclick="addTaskFromForm()">+ Add</button>
+      </div>
+    </div>` : ''}
+    ${renderPushedListHTML()}
     <div class="mode-toggle">
       <button class="mode-btn ${mode==='morning'?'active-morning':''}" onclick="setMode('morning')">🌅 Morning Brief</button>
       <button class="mode-btn ${mode==='evening'?'active-evening':''}" onclick="setMode('evening')">🌙 Evening Shutdown</button>
@@ -614,17 +627,22 @@ function renderForm() {
         <label>🗒️ Additional Context / Notes</label>
         <textarea id="notes" rows="2" placeholder="Blockers, context, things on your mind..."></textarea>
       </div>
-      ${pushedItems.length > 0 ? `
-      <div class="rolled-preview">
-        <div class="rolled-label">🔄 Active Pushed Items (auto-included)</div>
-        ${pushedItems.map(i => `<div class="rolled-item">• ${i.text} (Day ${i.pushCount})</div>`).join('')}
-      </div>` : ''}
       <button class="btn-generate ${mode}" onclick="generateBrief()">
         ${mode === 'morning' ? '🛫 Generate Morning Brief' : '🛬 Run Shutdown Ritual'}
       </button>
     </div>
-    ${renderPushedListHTML()}
     <button class="reset-key" onclick="handleResetKey()">Reset API Key / Sync Settings</button>`;
+
+  if (checklistItems.length > 0) renderChecklistItems();
+}
+
+function addTaskFromForm() {
+  const input = document.getElementById('newTaskInputForm');
+  if (!input || !input.value.trim()) return;
+  checklistItems.push({ id: Date.now(), text: input.value.trim(), priority: 'MED', done: false, added: true });
+  saveToCloud();
+  input.value = '';
+  renderForm();
 }
 
 function handleResetKey() {
