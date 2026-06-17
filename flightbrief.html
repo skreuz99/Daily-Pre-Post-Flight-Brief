@@ -240,9 +240,8 @@ function getSupaAnonKey() { return localStorage.getItem('sb_supa_anon'); }
 function saveSupaConfig(url, anon) { localStorage.setItem('sb_supa_url', url); localStorage.setItem('sb_supa_anon', anon); }
 
 function getDeviceId() {
-  let id = localStorage.getItem('sb_device_id');
-  if (!id) { id = 'sean-' + Math.random().toString(36).substring(2, 12); localStorage.setItem('sb_device_id', id); }
-  return id;
+  // Fixed shared identity — same across all of Sean's devices so desktop and phone read/write the same row
+  return 'sean-flightbrief-main';
 }
 
 function initSupabase() {
