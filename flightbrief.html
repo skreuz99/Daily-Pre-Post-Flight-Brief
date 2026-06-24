@@ -3,747 +3,778 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="Daily Brief" />
 <title>Daily Pre & Post Flight Brief</title>
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --bg: #f0f4f8; --surface: rgba(255,255,255,0.95); --border: #d1d9e0;
-    --text: #1a2332; --muted: #64748b; --subtle: #94a3b8;
-    --amber: #d97706; --amber-dark: #b45309;
-    --indigo: #4f46e5; --indigo-dark: #3730a3;
-    --green: #059669; --green-dark: #047857;
-    --red: #dc2626; --red-dark: #b91c1c;
-    --slate: #475569;
-    --font-display: 'Oswald', sans-serif; --font-body: 'DM Sans', sans-serif;
-  }
-  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-body); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
-  body { min-height: 100vh; min-height: -webkit-fill-available; background: linear-gradient(150deg, #dde8f5 0%, #f0f4f8 40%, #e8eef7 100%); padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
-  .grid-overlay { position: fixed; inset: 0; pointer-events: none; z-index: 0; background-image: linear-gradient(rgba(99,102,241,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.04) 1px, transparent 1px); background-size: 40px 40px; }
-  .glow { position: fixed; top: -20%; left: 50%; transform: translateX(-50%); width: 60vw; height: 40vh; pointer-events: none; z-index: 0; transition: background 0.4s ease; }
-  .glow.morning { background: radial-gradient(ellipse, rgba(217,119,6,0.08) 0%, transparent 70%); }
-  .glow.evening { background: radial-gradient(ellipse, rgba(79,70,229,0.08) 0%, transparent 70%); }
-  .app { max-width: 680px; margin: 0 auto; padding: 2rem 1.25rem 4rem; position: relative; z-index: 1; }
-  .header { text-align: center; margin-bottom: 1.5rem; }
-  .header-eyebrow { font-family: var(--font-display); font-size: 0.6rem; letter-spacing: 0.3em; text-transform: uppercase; color: #94a3b8; margin-bottom: 0.4rem; }
-  .header-title { font-family: var(--font-display); font-size: 2.4rem; font-weight: 700; letter-spacing: 0.05em; color: #1a2332; line-height: 1.1; }
-  .header-date { font-family: var(--font-display); font-size: 0.6rem; letter-spacing: 0.2em; color: #94a3b8; margin-top: 0.3rem; text-transform: uppercase; }
-  .sync-status { display: flex; align-items: center; justify-content: center; gap: 0.4rem; margin-top: 0.6rem; font-family: var(--font-display); font-size: 0.55rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--subtle); }
-  .sync-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
-  .sync-dot.offline { background: var(--subtle); }
-  .mode-toggle { display: flex; background: rgba(255,255,255,0.7); border: 1px solid var(--border); border-radius: 6px; padding: 4px; margin-bottom: 1.5rem; gap: 4px; }
-  .mode-btn { flex: 1; padding: 0.65rem; border: none; border-radius: 4px; font-family: var(--font-display); font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; background: transparent; color: var(--muted); font-weight: 400; }
-  .mode-btn.active-morning { background: linear-gradient(135deg, var(--amber), var(--amber-dark)); color: #fff; font-weight: 600; }
-  .mode-btn.active-evening { background: linear-gradient(135deg, var(--indigo), var(--indigo-dark)); color: #fff; font-weight: 600; }
-  .form { display: flex; flex-direction: column; gap: 1rem; }
-  .field label { display: block; font-family: var(--font-display); font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--slate); margin-bottom: 0.45rem; }
-  textarea, input[type="password"], input[type="text"] { width: 100%; background: rgba(255,255,255,0.9); border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem 1rem; color: var(--text); font-family: var(--font-body); font-size: 0.9rem; line-height: 1.6; resize: vertical; outline: none; transition: border-color 0.2s; -webkit-appearance: none; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-  textarea:focus, input:focus { border-color: var(--slate); }
-  textarea::placeholder, input::placeholder { color: #b0bec5; }
-  .btn-generate { width: 100%; padding: 1rem; border: none; border-radius: 6px; font-family: var(--font-display); font-size: 0.82rem; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-top: 0.5rem; color: #fff; }
-  .btn-generate.morning { background: linear-gradient(135deg, var(--amber), var(--amber-dark)); }
-  .btn-generate.evening { background: linear-gradient(135deg, var(--indigo), var(--indigo-dark)); }
-  .btn-generate:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
-  .btn-row { display: flex; gap: 0.75rem; margin-top: 0.75rem; }
-  .btn-secondary { flex: 1; padding: 0.75rem; border-radius: 6px; font-family: var(--font-display); font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; background: rgba(255,255,255,0.7); border: 1px solid var(--border); color: var(--muted); }
-  .btn-regen-morning { border-color: rgba(217,119,6,0.4); color: var(--amber); }
-  .btn-regen-evening { border-color: rgba(79,70,229,0.4); color: var(--indigo); }
-  .brief-card { border-radius: 8px; padding: 1.8rem; margin-bottom: 0.75rem; background: rgba(255,255,255,0.95); }
-  .brief-card.morning { border: 1px solid rgba(217,119,6,0.25); box-shadow: 0 4px 20px rgba(217,119,6,0.08); }
-  .brief-card.evening { border: 1px solid rgba(79,70,229,0.25); box-shadow: 0 4px 20px rgba(79,70,229,0.08); }
-  .brief-header { font-family: var(--font-display); font-size: 0.58rem; letter-spacing: 0.3em; padding-bottom: 0.8rem; margin-bottom: 1rem; text-transform: uppercase; }
-  .brief-header.morning { color: var(--amber); border-bottom: 1px solid rgba(217,119,6,0.2); }
-  .brief-header.evening { color: var(--indigo); border-bottom: 1px solid rgba(79,70,229,0.2); }
-  .brief-section-title { font-family: var(--font-display); font-size: 0.72rem; letter-spacing: 0.15em; text-transform: uppercase; margin-top: 1.2rem; margin-bottom: 0.3rem; }
-  .brief-section-title.morning { color: var(--amber); }
-  .brief-section-title.evening { color: var(--indigo); }
-  .brief-line { color: #334155; font-size: 0.92rem; line-height: 1.7; }
-  .brief-spacer { height: 0.5rem; }
-  .loading-wrap { display: flex; flex-direction: column; align-items: center; gap: 1rem; padding: 3rem 0; }
-  .spinner { width: 36px; height: 36px; border: 2px solid var(--border); border-radius: 50%; border-top-color: var(--amber); animation: spin 0.8s linear infinite; }
-  .spinner.evening { border-top-color: var(--indigo); }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .loading-text { font-family: var(--font-display); font-size: 0.65rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--muted); }
-  .footer { text-align: center; margin-top: 2.5rem; font-family: var(--font-display); font-size: 0.5rem; letter-spacing: 0.25em; color: #b0bec5; text-transform: uppercase; }
-  .setup-card { background: rgba(255,255,255,0.95); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 1rem; }
-  .setup-icon { font-size: 2.5rem; margin-bottom: 1rem; }
-  .setup-card h2 { font-family: var(--font-display); font-size: 1.1rem; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.6rem; color: #1a2332; }
-  .setup-card p { color: var(--muted); font-size: 0.85rem; line-height: 1.6; margin-bottom: 1.25rem; }
-  .setup-card .field { text-align: left; }
-  .btn-save { width: 100%; padding: 0.9rem; background: linear-gradient(135deg, var(--indigo), var(--indigo-dark)); border: none; border-radius: 6px; color: #fff; font-family: var(--font-display); font-size: 0.78rem; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 600; cursor: pointer; margin-top: 0.5rem; }
-  .setup-note { font-size: 0.75rem; color: #94a3b8; margin-top: 1rem; line-height: 1.5; }
-  .reset-key { font-family: var(--font-display); font-size: 0.55rem; letter-spacing: 0.15em; text-transform: uppercase; color: #94a3b8; background: none; border: none; cursor: pointer; margin-top: 1.5rem; text-decoration: underline; display: block; margin-left: auto; margin-right: auto; }
-
-  /* CHECKLIST STYLES */
-  .checklist-card { background: rgba(255,255,255,0.95); border-radius: 8px; padding: 1.5rem; margin-bottom: 0.75rem; border: 1px solid rgba(5,150,105,0.25); box-shadow: 0 4px 20px rgba(5,150,105,0.06); }
-  .checklist-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.8rem; border-bottom: 1px solid rgba(5,150,105,0.15); }
-  .checklist-title { font-family: var(--font-display); font-size: 0.58rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--green); }
-  .checklist-progress { font-family: var(--font-display); font-size: 0.6rem; letter-spacing: 0.1em; color: var(--muted); }
-  .checklist-items { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; }
-  .checklist-item { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.6rem 0.75rem; border-radius: 6px; cursor: pointer; transition: all 0.2s; border: 1px solid transparent; background: rgba(248,250,252,0.8); }
-  .checklist-item:hover { background: rgba(5,150,105,0.04); border-color: rgba(5,150,105,0.15); }
-  .checklist-item.done { background: rgba(5,150,105,0.06); border-color: rgba(5,150,105,0.15); }
-  .check-box { width: 20px; height: 20px; border-radius: 4px; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; transition: all 0.2s; background: #fff; }
-  .checklist-item.done .check-box { background: var(--green); border-color: var(--green); }
-  .check-icon { color: #fff; font-size: 0.7rem; font-weight: 700; display: none; }
-  .checklist-item.done .check-icon { display: block; }
-  .check-text { font-size: 0.88rem; color: #334155; line-height: 1.5; flex: 1; }
-  .checklist-item.done .check-text { color: #94a3b8; text-decoration: line-through; }
-  .check-tag { font-family: var(--font-display); font-size: 0.5rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.15rem 0.4rem; border-radius: 3px; flex-shrink: 0; margin-top: 3px; }
-  .tag-high { background: rgba(220,38,38,0.1); color: #dc2626; }
-  .tag-med { background: rgba(217,119,6,0.1); color: var(--amber); }
-  .tag-low { background: rgba(71,85,105,0.1); color: var(--slate); }
-  .tag-added { background: rgba(79,70,229,0.1); color: var(--indigo); }
-  .push-btn { width: 22px; height: 22px; border-radius: 4px; border: 1.5px solid var(--border); background: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; cursor: pointer; transition: all 0.2s; font-size: 0.7rem; color: var(--subtle); }
-  .push-btn:hover { border-color: var(--amber); color: var(--amber); background: rgba(217,119,6,0.06); }
-
-  /* ADD TASK */
-  .add-task-row { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
-  .add-task-input { flex: 1; padding: 0.6rem 0.85rem; background: rgba(255,255,255,0.9); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: var(--font-body); font-size: 0.88rem; outline: none; -webkit-appearance: none; }
-  .add-task-input:focus { border-color: var(--green); }
-  .btn-add-task { padding: 0.6rem 1rem; background: linear-gradient(135deg, var(--green), var(--green-dark)); border: none; border-radius: 6px; color: #fff; font-family: var(--font-display); font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; white-space: nowrap; font-weight: 600; }
-
-  /* PUSHED LIST */
-  .pushed-card { background: rgba(255,255,255,0.95); border-radius: 8px; padding: 1.5rem; margin-bottom: 0.75rem; border: 1px solid rgba(220,38,38,0.2); box-shadow: 0 4px 20px rgba(220,38,38,0.04); }
-  .pushed-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.8rem; border-bottom: 1px solid rgba(220,38,38,0.12); }
-  .pushed-title { font-family: var(--font-display); font-size: 0.58rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--red); }
-  .pushed-count { font-family: var(--font-display); font-size: 0.6rem; letter-spacing: 0.1em; color: var(--muted); }
-  .pushed-item { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.7rem 0.75rem; border-radius: 6px; margin-bottom: 0.5rem; background: rgba(254,242,242,0.6); border: 1px solid rgba(220,38,38,0.1); cursor: pointer; transition: all 0.2s; }
-  .pushed-item:hover { background: rgba(254,242,242,0.9); }
-  .pushed-check { width: 20px; height: 20px; border-radius: 4px; border: 2px solid rgba(220,38,38,0.3); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; background: #fff; }
-  .pushed-content { flex: 1; }
-  .pushed-text { font-size: 0.88rem; color: #334155; line-height: 1.5; }
-  .pushed-meta { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.35rem; }
-  .pushed-day-badge { font-family: var(--font-display); font-size: 0.55rem; letter-spacing: 0.05em; text-transform: uppercase; padding: 0.15rem 0.5rem; border-radius: 10px; background: var(--red); color: #fff; font-weight: 600; }
-  .pushed-reason { font-size: 0.72rem; color: var(--muted); font-style: italic; }
-  .pushed-empty { text-align: center; padding: 1.5rem 0; color: var(--subtle); font-size: 0.82rem; }
-
-  /* PUSH MODAL */
-  .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 1.5rem; }
-  .modal-card { background: #fff; border-radius: 12px; padding: 1.75rem; max-width: 380px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
-  .modal-title { font-family: var(--font-display); font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 0.5rem; }
-  .modal-task { font-size: 0.85rem; color: var(--muted); margin-bottom: 1rem; padding: 0.6rem 0.85rem; background: var(--bg); border-radius: 6px; }
-  .modal-input { width: 100%; padding: 0.7rem 0.9rem; border: 1px solid var(--border); border-radius: 6px; font-family: var(--font-body); font-size: 0.88rem; outline: none; margin-bottom: 1rem; -webkit-appearance: none; }
-  .modal-btn-row { display: flex; gap: 0.6rem; }
-  .modal-btn { flex: 1; padding: 0.7rem; border-radius: 6px; font-family: var(--font-display); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; font-weight: 600; border: none; }
-  .modal-btn-cancel { background: var(--bg); color: var(--muted); }
-  .modal-btn-confirm { background: var(--amber); color: #fff; }
-
-  /* ROLLED ITEMS PREVIEW */
-  .rolled-preview { background: rgba(255,255,255,0.8); border: 1px solid rgba(217,119,6,0.2); border-radius: 6px; padding: 0.75rem 1rem; margin-top: 0.75rem; }
-  .rolled-label { font-family: var(--font-display); font-size: 0.55rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--amber); margin-bottom: 0.4rem; }
-  .rolled-item { font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
-
-  /* ERROR STATE */
-  .error-card { background: rgba(255,255,255,0.95); border: 1px solid rgba(220,38,38,0.25); border-radius: 8px; padding: 1.5rem; text-align: center; }
-  .error-title { font-family: var(--font-display); font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; color: #dc2626; margin-bottom: 0.5rem; }
-  .error-msg { font-size: 0.85rem; color: var(--muted); line-height: 1.6; margin-bottom: 1rem; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #f0f4f8; --surface: #ffffff; --border: #d1d9e0;
+  --text: #1a2332; --muted: #64748b; --subtle: #94a3b8;
+  --amber: #d97706; --amber-dark: #b45309; --amber-light: rgba(217,119,6,0.1);
+  --indigo: #4f46e5; --indigo-dark: #3730a3; --indigo-light: rgba(79,70,229,0.1);
+  --green: #059669; --green-dark: #047857; --green-light: rgba(5,150,105,0.1);
+  --red: #dc2626; --red-light: rgba(220,38,38,0.08);
+  --slate: #475569;
+  --font-display: 'Oswald', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --radius: 10px;
+  --shadow: 0 2px 12px rgba(15,34,64,0.08);
+}
+html, body { height: 100%; font-family: var(--font-body); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+body { min-height: 100vh; background: linear-gradient(150deg, #dde8f5 0%, #f0f4f8 50%, #e8eef7 100%); }
+.app { max-width: 720px; margin: 0 auto; padding: 0 0 6rem; }
+.app-header { text-align: center; padding: 1.75rem 1.25rem 0; }
+.header-eyebrow { font-family: var(--font-display); font-size: 0.58rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--subtle); margin-bottom: 0.35rem; }
+.header-title { font-family: var(--font-display); font-size: 2.2rem; font-weight: 700; color: var(--text); line-height: 1.1; letter-spacing: 0.03em; }
+.header-date { font-family: var(--font-display); font-size: 0.58rem; letter-spacing: 0.18em; color: var(--subtle); margin-top: 0.25rem; text-transform: uppercase; }
+.sync-pill { display: inline-flex; align-items: center; gap: 0.35rem; margin-top: 0.6rem; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 0.25rem 0.75rem; font-family: var(--font-display); font-size: 0.52rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); }
+.sync-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--subtle); transition: background 0.3s; }
+.sync-dot.live { background: var(--green); }
+.tab-nav { display: flex; gap: 0; padding: 1rem 1.25rem 0; position: sticky; top: 0; z-index: 50; background: linear-gradient(to bottom, #eef2f9 80%, transparent); }
+.tab-btn { flex: 1; padding: 0.6rem 0.4rem; border: none; border-radius: 8px 8px 0 0; font-family: var(--font-display); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; background: rgba(255,255,255,0.5); color: var(--muted); border-bottom: 2px solid transparent; font-weight: 400; }
+.tab-btn.active { background: var(--surface); color: var(--text); font-weight: 600; box-shadow: var(--shadow); border-bottom: 2px solid var(--amber); }
+.tab-content { padding: 0 1.25rem; display: none; }
+.tab-content.active { display: block; }
+.card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: 1rem; overflow: hidden; }
+.card-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); cursor: pointer; user-select: none; }
+.card-header-left { display: flex; align-items: center; gap: 0.6rem; }
+.card-title { font-family: var(--font-display); font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text); font-weight: 600; }
+.card-badge { font-family: var(--font-display); font-size: 0.52rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.2rem 0.5rem; border-radius: 10px; }
+.card-chevron { font-size: 0.7rem; color: var(--muted); transition: transform 0.2s; }
+.card-body { padding: 1.25rem; }
+.card.collapsed .card-body { display: none; }
+.card.collapsed .card-chevron { transform: rotate(-90deg); }
+.mode-toggle { display: flex; background: rgba(255,255,255,0.6); border: 1px solid var(--border); border-radius: 8px; padding: 3px; margin-bottom: 1rem; gap: 3px; }
+.mode-btn { flex: 1; padding: 0.6rem; border: none; border-radius: 6px; font-family: var(--font-display); font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; background: transparent; color: var(--muted); font-weight: 400; }
+.mode-btn.active-morning { background: linear-gradient(135deg, var(--amber), var(--amber-dark)); color: #fff; font-weight: 600; }
+.mode-btn.active-evening { background: linear-gradient(135deg, var(--indigo), var(--indigo-dark)); color: #fff; font-weight: 600; }
+.form-field { margin-bottom: 0.85rem; }
+.form-field label { display: block; font-family: var(--font-display); font-size: 0.6rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--slate); margin-bottom: 0.4rem; }
+textarea, input[type="text"], input[type="password"] { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 7px; padding: 0.7rem 0.9rem; color: var(--text); font-family: var(--font-body); font-size: 0.88rem; line-height: 1.55; resize: vertical; outline: none; transition: border-color 0.2s; -webkit-appearance: none; }
+textarea:focus, input:focus { border-color: var(--slate); background: #fff; }
+textarea::placeholder, input::placeholder { color: #b0bec5; }
+.btn { width: 100%; padding: 0.9rem; border: none; border-radius: 8px; font-family: var(--font-display); font-size: 0.78rem; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 600; cursor: pointer; transition: all 0.2s; color: #fff; margin-top: 0.5rem; }
+.btn-morning { background: linear-gradient(135deg, var(--amber), var(--amber-dark)); }
+.btn-evening { background: linear-gradient(135deg, var(--indigo), var(--indigo-dark)); }
+.btn-primary { background: linear-gradient(135deg, var(--indigo), var(--indigo-dark)); }
+.btn-green { background: linear-gradient(135deg, var(--green), var(--green-dark)); }
+.btn-row { display: flex; gap: 0.6rem; margin-top: 0.75rem; }
+.btn-sm { flex: 1; padding: 0.65rem; font-family: var(--font-display); font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; border-radius: 7px; cursor: pointer; background: rgba(255,255,255,0.8); border: 1px solid var(--border); color: var(--muted); transition: all 0.2s; }
+.btn-sm-morning { border-color: rgba(217,119,6,0.35); color: var(--amber); }
+.btn-sm-evening { border-color: rgba(79,70,229,0.35); color: var(--indigo); }
+.brief-output { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 1.5rem; margin-bottom: 1rem; }
+.brief-output.morning { border-color: rgba(217,119,6,0.25); box-shadow: 0 4px 20px rgba(217,119,6,0.07); }
+.brief-output.evening { border-color: rgba(79,70,229,0.25); box-shadow: 0 4px 20px rgba(79,70,229,0.07); }
+.brief-stamp { font-family: var(--font-display); font-size: 0.55rem; letter-spacing: 0.28em; text-transform: uppercase; padding-bottom: 0.75rem; margin-bottom: 0.85rem; border-bottom: 1px solid var(--border); }
+.brief-stamp.morning { color: var(--amber); }
+.brief-stamp.evening { color: var(--indigo); }
+.brief-line { color: #334155; font-size: 0.9rem; line-height: 1.75; }
+.brief-section { font-family: var(--font-display); font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase; margin-top: 1.1rem; margin-bottom: 0.25rem; }
+.brief-section.morning { color: var(--amber); }
+.brief-section.evening { color: var(--indigo); }
+.brief-gap { height: 0.4rem; }
+.checklist-wrap { margin-bottom: 1rem; }
+.cl-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+.cl-title { font-family: var(--font-display); font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--green); }
+.cl-progress { font-family: var(--font-display); font-size: 0.58rem; letter-spacing: 0.1em; color: var(--muted); }
+.cl-items { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 0.75rem; }
+.cl-item { display: flex; align-items: flex-start; gap: 0.65rem; padding: 0.55rem 0.7rem; border-radius: 7px; border: 1px solid transparent; background: rgba(248,250,252,0.9); transition: all 0.15s; }
+.cl-item.done { background: var(--green-light); border-color: rgba(5,150,105,0.2); }
+.cl-check { width: 18px; height: 18px; border-radius: 4px; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; cursor: pointer; transition: all 0.15s; background: #fff; }
+.cl-item.done .cl-check { background: var(--green); border-color: var(--green); }
+.cl-checkmark { color: #fff; font-size: 0.62rem; font-weight: 800; display: none; }
+.cl-item.done .cl-checkmark { display: block; }
+.cl-text { font-size: 0.86rem; color: #334155; line-height: 1.45; flex: 1; cursor: pointer; }
+.cl-item.done .cl-text { color: var(--subtle); text-decoration: line-through; }
+.cl-tag { font-family: var(--font-display); font-size: 0.48rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.12rem 0.38rem; border-radius: 4px; flex-shrink: 0; margin-top: 3px; }
+.tag-HIGH { background: rgba(220,38,38,0.1); color: var(--red); }
+.tag-MED { background: var(--amber-light); color: var(--amber); }
+.tag-LOW { background: rgba(71,85,105,0.1); color: var(--slate); }
+.tag-ADD { background: var(--indigo-light); color: var(--indigo); }
+.cl-push { width: 20px; height: 20px; border-radius: 4px; border: 1.5px solid var(--border); background: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; cursor: pointer; font-size: 0.65rem; color: var(--subtle); transition: all 0.15s; }
+.cl-push:hover { border-color: var(--amber); color: var(--amber); }
+.add-row { display: flex; gap: 0.45rem; }
+.add-input { flex: 1; padding: 0.55rem 0.8rem; background: #fff; border: 1px solid var(--border); border-radius: 7px; font-family: var(--font-body); font-size: 0.86rem; color: var(--text); outline: none; -webkit-appearance: none; }
+.add-input:focus { border-color: var(--green); }
+.add-btn { padding: 0.55rem 0.9rem; background: linear-gradient(135deg, var(--green), var(--green-dark)); border: none; border-radius: 7px; color: #fff; font-family: var(--font-display); font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; white-space: nowrap; font-weight: 600; }
+.pushed-wrap { margin-bottom: 1rem; }
+.pushed-card { background: var(--surface); border-radius: var(--radius); border: 1px solid rgba(220,38,38,0.18); box-shadow: 0 2px 12px rgba(220,38,38,0.05); }
+.pushed-hdr { display: flex; justify-content: space-between; align-items: center; padding: 0.85rem 1.1rem; border-bottom: 1px solid rgba(220,38,38,0.1); }
+.pushed-title { font-family: var(--font-display); font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--red); }
+.pushed-count { font-family: var(--font-display); font-size: 0.56rem; color: var(--muted); letter-spacing: 0.08em; }
+.pushed-body { padding: 0.75rem 1.1rem; }
+.pushed-empty { font-size: 0.8rem; color: var(--subtle); text-align: center; padding: 0.75rem 0; }
+.pushed-item { display: flex; align-items: flex-start; gap: 0.65rem; padding: 0.6rem 0.7rem; border-radius: 7px; background: var(--red-light); border: 1px solid rgba(220,38,38,0.1); margin-bottom: 0.4rem; cursor: pointer; transition: all 0.15s; }
+.pushed-item:hover { background: rgba(220,38,38,0.12); }
+.pushed-circle { width: 18px; height: 18px; border-radius: 50%; border: 2px solid rgba(220,38,38,0.3); flex-shrink: 0; margin-top: 2px; background: #fff; }
+.pushed-content { flex: 1; }
+.pushed-text { font-size: 0.86rem; color: #334155; line-height: 1.45; }
+.pushed-meta { display: flex; gap: 0.45rem; align-items: center; margin-top: 0.3rem; flex-wrap: wrap; }
+.day-badge { font-family: var(--font-display); font-size: 0.5rem; letter-spacing: 0.05em; text-transform: uppercase; padding: 0.12rem 0.45rem; border-radius: 8px; background: var(--red); color: #fff; font-weight: 700; }
+.pushed-reason { font-size: 0.72rem; color: var(--muted); font-style: italic; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(10,20,40,0.5); display: flex; align-items: center; justify-content: center; z-index: 200; padding: 1.5rem; }
+.modal-box { background: #fff; border-radius: 14px; padding: 1.75rem; max-width: 360px; width: 100%; box-shadow: 0 24px 64px rgba(0,0,0,0.2); }
+.modal-title { font-family: var(--font-display); font-size: 0.95rem; font-weight: 700; color: var(--text); margin-bottom: 0.5rem; }
+.modal-task { font-size: 0.83rem; color: var(--muted); background: var(--bg); border-radius: 7px; padding: 0.55rem 0.8rem; margin-bottom: 1rem; line-height: 1.5; }
+.modal-input { width: 100%; padding: 0.65rem 0.85rem; border: 1px solid var(--border); border-radius: 7px; font-family: var(--font-body); font-size: 0.86rem; outline: none; margin-bottom: 1rem; -webkit-appearance: none; color: var(--text); }
+.modal-btns { display: flex; gap: 0.5rem; }
+.modal-btn { flex: 1; padding: 0.65rem; border-radius: 7px; font-family: var(--font-display); font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; font-weight: 600; border: none; }
+.modal-cancel { background: var(--bg); color: var(--muted); }
+.modal-confirm { background: var(--amber); color: #fff; }
+.loading-wrap { display: flex; flex-direction: column; align-items: center; gap: 0.85rem; padding: 2.5rem 0; }
+.spinner { width: 34px; height: 34px; border: 2.5px solid var(--border); border-radius: 50%; border-top-color: var(--amber); animation: spin 0.8s linear infinite; }
+.spinner.eve { border-top-color: var(--indigo); }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-txt { font-family: var(--font-display); font-size: 0.62rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); }
+.error-box { background: #fff; border: 1px solid rgba(220,38,38,0.25); border-radius: var(--radius); padding: 1.25rem; text-align: center; margin-bottom: 1rem; }
+.error-title { font-family: var(--font-display); font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--red); margin-bottom: 0.4rem; }
+.error-msg { font-size: 0.83rem; color: var(--muted); line-height: 1.55; margin-bottom: 0.85rem; }
+.playbook-item { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.85rem; border-radius: 8px; background: var(--bg); border: 1px solid var(--border); margin-bottom: 0.5rem; }
+.playbook-status { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+.status-active { background: var(--green); }
+.status-pending { background: var(--amber); }
+.status-paused { background: var(--subtle); }
+.playbook-content { flex: 1; min-width: 0; }
+.playbook-name { font-size: 0.88rem; font-weight: 600; color: var(--text); margin-bottom: 0.2rem; }
+.playbook-note { font-size: 0.78rem; color: var(--muted); line-height: 1.5; }
+.playbook-tag { font-family: var(--font-display); font-size: 0.5rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.12rem 0.4rem; border-radius: 4px; background: var(--green-light); color: var(--green); margin-top: 0.3rem; display: inline-block; }
+.client-card { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 0.85rem; margin-bottom: 0.5rem; }
+.client-name { font-size: 0.9rem; font-weight: 600; color: var(--text); }
+.client-status { font-size: 0.75rem; color: var(--muted); margin-top: 0.15rem; }
+.client-action { font-size: 0.75rem; color: var(--amber); font-weight: 600; margin-top: 0.3rem; }
+.project-item { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem; margin-bottom: 0.6rem; }
+.project-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; }
+.project-name { font-size: 0.9rem; font-weight: 600; color: var(--text); flex: 1; }
+.project-pct { font-family: var(--font-display); font-size: 0.65rem; letter-spacing: 0.05em; color: var(--muted); }
+.progress-bar { height: 4px; background: var(--border); border-radius: 2px; margin-bottom: 0.5rem; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--green), #10b981); transition: width 0.4s ease; }
+.project-notes { font-size: 0.78rem; color: var(--muted); line-height: 1.55; }
+.project-controls { display: flex; gap: 0.4rem; margin-top: 0.65rem; flex-wrap: wrap; }
+.pct-btn { padding: 0.3rem 0.6rem; border: 1px solid var(--border); border-radius: 5px; background: #fff; font-family: var(--font-display); font-size: 0.55rem; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; color: var(--muted); transition: all 0.15s; }
+.pct-btn:hover { border-color: var(--green); color: var(--green); }
+.pct-btn.complete-btn { background: var(--green); border-color: var(--green); color: #fff; }
+.setup-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1rem; box-shadow: var(--shadow); }
+.setup-title { font-family: var(--font-display); font-size: 1rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text); margin-bottom: 0.5rem; }
+.setup-sub { font-size: 0.83rem; color: var(--muted); line-height: 1.6; margin-bottom: 1.1rem; }
+.setup-note { font-size: 0.72rem; color: var(--subtle); margin-top: 0.65rem; line-height: 1.55; }
+.section-label { font-family: var(--font-display); font-size: 0.58rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); margin: 1.25rem 0 0.6rem; }
+.app-footer { text-align: center; padding: 1.5rem; font-family: var(--font-display); font-size: 0.48rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--subtle); }
+.reset-link { background: none; border: none; font-family: var(--font-display); font-size: 0.5rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--subtle); cursor: pointer; text-decoration: underline; margin-top: 0.5rem; display: block; margin-left: auto; margin-right: auto; }
+.notes-textarea { width: 100%; font-size: 0.78rem; min-height: 56px; padding: 0.45rem 0.65rem; background: rgba(255,255,255,0.7); border: 1px solid rgba(0,0,0,0.08); border-radius: 6px; resize: vertical; font-family: var(--font-body); color: var(--text); outline: none; margin-bottom: 0.5rem; }
+.play-select { font-size: 0.7rem; border: 1px solid var(--border); border-radius: 4px; padding: 0.15rem 0.35rem; background: #fff; color: var(--text); font-family: var(--font-body); margin-right: 0.3rem; }
+@media (max-width: 480px) {
+  .header-title { font-size: 1.8rem; }
+  .tab-btn { font-size: 0.55rem; padding: 0.5rem 0.25rem; }
+}
 </style>
 </head>
 <body>
-<div class="grid-overlay"></div>
-<div class="glow morning" id="glow"></div>
 <div class="app">
-  <div class="header">
-    <div class="header-eyebrow">Daily Ops Center</div>
+  <div class="app-header">
+    <div class="header-eyebrow">Personal Ops Center</div>
     <div class="header-title">DAILY PRE & POST<br>FLIGHT BRIEF</div>
     <div class="header-date" id="headerDate"></div>
-    <div class="sync-status" id="syncStatus"><span class="sync-dot offline"></span><span>Local Only</span></div>
+    <div><span class="sync-pill"><span class="sync-dot" id="syncDot"></span><span id="syncLabel">Local Only</span></span></div>
   </div>
-  <div id="appContent"></div>
-  <div class="footer">Sean's Ops Center • Powered by Claude</div>
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('today')" id="tab-today">🌅 Today</button>
+    <button class="tab-btn" onclick="switchTab('business')" id="tab-business">💼 Business HQ</button>
+    <button class="tab-btn" onclick="switchTab('life')" id="tab-life">🏠 Life Ops</button>
+  </div>
+  <div class="tab-content active" id="content-today"><div style="padding-top:1rem" id="todayMain"></div></div>
+  <div class="tab-content" id="content-business"><div style="padding-top:1rem" id="businessMain"></div></div>
+  <div class="tab-content" id="content-life"><div style="padding-top:1rem" id="lifeMain"></div></div>
+  <div class="app-footer">Sean's Ops Center • Powered by Claude<button class="reset-link" onclick="handleReset()">Reset / Update Credentials</button></div>
 </div>
 
 <script>
-const SYSTEM_PROMPT = `You are Sean's personal daily briefing assistant. You know Sean well — use this context in every brief without him having to re-explain it.
+// ── SYSTEM PROMPT ──────────────────────────────────────────────────────
+const SYSTEM_PROMPT = `You are Sean's personal daily briefing assistant. Use this standing context in every brief without him having to re-explain.
 
 ## WHO HE IS
-- Airline pilot based in Quakertown, PA. Air Force veteran.
-- Married to Dawn. Kids: Nicholas, Kara, Kelly (oldest to youngest). Kelly's boyfriend is Ben.
-- Parents live in Red Hill, PA. Mom is currently at Pennsburg Manor for rehab — visits are a recurring priority.
-- Social circle: The Hollisters, Gillespies, Coles, Facaras, Stefanaks (close neighborhood friends).
-- Plays ball hockey and golf. Regular golf partner: Barry.
-- Owns a 2006 Jeep Wrangler Unlimited (LJ).
+- Airline pilot, PHL hub, Airbus A320. Air Force veteran. Quakertown, PA.
+- Married to Dawn. Kids: Nicholas, Kara, Kelly (oldest to youngest). Kelly's boyfriend: Ben.
+- Parents in Red Hill, PA. Mom recently at Pennsburg Manor for rehab — discharge expected soon.
+- Social: The Hollisters, Gillespies, Coles, Facaras, Stefanaks. Golf partner: Barry.
+- Owns 2006 Jeep Wrangler Unlimited (LJ). Plays ball hockey and golf.
 
-## HIS BUSINESS
-- Company: KND Marketing, LLC | Website: PhillySEO.ai
-- AI-native marketing agency — lean stack, high margins
-- Current clients: Bucks County real estate lead gen (Jim Dietrich, Realty ONE Group Supreme), Penn Flight Academy
-- Active relationship with Abby at iMark Infotech
-- Building AI lead gen scraper bot and cold email funnel — THIS IS THE GROWTH LEVER
-- Building AI home valuation tool with Rentcast API integration for real estate site
-- NEXT PHASE: appointment setting and actively building the client list
-- Operating philosophy: MASSIVE IMPERFECT ACTION. Done beats perfect.
+## KND MARKETING, LLC — PhillySEO.ai
+- AI-native agency, lean stack, high margins
+- Primary focus: Tyler Lordi's Master Playbook — implementing plays in sequence
+- Active clients: Jim Dietrich (Realty ONE Group Supreme), Penn Flight Academy, CommercialMultiEngine.com
+- iMark/Abby: relationship shrinking, leaving in place
+- Building: AI home valuation tool (Rentcast API pending), rank-and-rent SEO sites
+- Growth lever: appointment setting + new client acquisition via Tyler's playbook
+- Philosophy: MASSIVE IMPERFECT ACTION. Done beats perfect.
 
 ## AVIATION
-- Active airline pilot (PHL hub)
-- MEI checkride on hold (Beechcraft Duchess BE-76)
-- FIRC COMPLETE — scored 100% on final exam. Only waiting on American Flyers to process and issue temporary certificate. Do NOT flag this as a pending deadline anymore — only mention if certificate is delayed close to June 28.
-- Departure language: "Out-the-door time" or "Van time" — NOT "Wheels Up"
-- Out-the-door standard: 2.5 hours before departure.
+- Active airline pilot (PHL hub). MEI checkride on hold.
+- FIRC: COMPLETE — 100% score, certificate pending from American Flyers. Do NOT flag as deadline.
+- Departure: "Out-the-door time" or "Van time" — NEVER "Wheels Up"
+- Out-the-door standard: 2.5 hours before departure. Always calculate in flight day briefs.
 
-## SEA-DOOS (4 total — Jersey Shore use)
-- Multiple in rotation — carb rebuilds, fuel pump installs, motor swaps ongoing
-- Actively seeking a second 2-place trailer
-
+## SEA-DOOS (4 — Jersey Shore) — #1 ready, #2 nearly ready, #3 carb reinstall pending, #4 motor swap last
 ## OPERATING STANDARDS
 - Hard stops at 1700 on called shutdown days
-- Business development gets a non-negotiable daily block — flag if it's missing or rolling
-- Intentional downtime is a scheduled mission item (per Ben's feedback)
-- Flag when business items keep rolling without execution — call it out directly
-- Brief language: military/aviation tone. BLUF. No fluff.
-- "Massive imperfect action" is the operating philosophy
+- Business development: non-negotiable daily block — flag if missing or rolling
+- Intentional downtime is a scheduled mission item
+- Home projects: sequential, one 100% complete before starting next
+- Flag business items rolling 2+ days — call it out directly
 
-## CHECKLIST INSTRUCTIONS
-End every brief with a checklist section formatted EXACTLY like this:
+## CHECKLIST — MANDATORY
+CRITICAL: Every brief MUST end with a CHECKLIST section. NEVER skip it. NEVER substitute narrative text.
 
+Format EXACTLY:
 CHECKLIST:
-[HIGH] Task description here
-[MED] Medium priority task
-[LOW] Low priority task
+[HIGH] Task here
+[MED] Task here
+[LOW] Task here
 
-5-10 actionable items max, pulled from the priority stack.
+Rules: 5-10 items. ONLY HIGH/MED/LOW. Pull from priority stack. CHECKLIST: on its own line. Nothing after checklist items.
 
-## BRIEF FORMATS
-MORNING BRIEF: Mission objective first. Priority stack by impact. Flag conflicts. Call out business development. Direct send-off. Then CHECKLIST.
-EVENING SHUTDOWN: Honest debrief. What got done, what rolled and why. Preview tomorrow. Flag items rolling 2+ days. Wheels-down sign-off. Then CHECKLIST for tomorrow.
+## FORMAT
+MORNING: Mission objective → Priority stack → Conflicts → Business dev flag → Send-off → CHECKLIST
+EVENING: Debrief → What rolled/why → Tomorrow preview → 2+ day rollovers called out → Wheels-down → CHECKLIST
+Tone: Military/aviation. BLUF. Emoji headers. Concise.`;
 
-Format with emoji section headers. Concise. Sharp. Mission briefing tone.`;
+// ── CONSTANTS ──────────────────────────────────────────────────────────
+const DEVICE_ID = 'sean-flightbrief-main';
+const K = { API:'sb_api_key', SUPA_URL:'sb_supa_url', SUPA_ANON:'sb_supa_anon', CL:'sb_checklist', PUSHED:'sb_pushed', PROJECTS:'sb_projects', PLAYS:'sb_plays' };
 
-// ── STATE ───────────────────────────────────────────────
-let mode = 'morning';
-let loading = false;
-let generated = false;
-let briefText = '';
-let checklistItems = [];
-let pushedItems = [];
-let errorMsg = '';
-let lastInputs = {};
+// ── STATE ──────────────────────────────────────────────────────────────
 let supaClient = null;
-let deviceId = null;
-let pushModalTask = null;
+let briefMode = 'morning', briefLoading = false, briefGenerated = false, briefText = '', briefError = '', lastInputs = {};
+let checklistItems = [], pushedItems = [], projects = [], plays = [];
+let pushModalItem = null;
 
+// ── INIT ───────────────────────────────────────────────────────────────
 document.getElementById('headerDate').textContent =
-  new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' }).toUpperCase();
+  new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'}).toUpperCase();
 
-// ── KEYS / STORAGE ──────────────────────────────────────
-function getKey() { return localStorage.getItem('sb_api_key'); }
-function saveKey(k) { localStorage.setItem('sb_api_key', k); }
-function clearKey() { localStorage.removeItem('sb_api_key'); }
-
-function getSupaUrl() { return localStorage.getItem('sb_supa_url'); }
-function getSupaAnonKey() { return localStorage.getItem('sb_supa_anon'); }
-function saveSupaConfig(url, anon) { localStorage.setItem('sb_supa_url', url); localStorage.setItem('sb_supa_anon', anon); }
-
-function getDeviceId() {
-  // Fixed shared identity — same across all of Sean's devices so desktop and phone read/write the same row
-  return 'sean-flightbrief-main';
+async function init() {
+  initSupa();
+  await loadData();
+  renderAll();
 }
 
-function initSupabase() {
-  const url = getSupaUrl(); const anon = getSupaAnonKey();
-  if (!url || !anon) return false;
-  try {
-    supaClient = window.supabase.createClient(url, anon);
-    deviceId = getDeviceId();
-    document.getElementById('syncStatus').innerHTML = '<span class="sync-dot"></span><span>Synced</span>';
-    return true;
-  } catch(e) { return false; }
+function initSupa() {
+  const url = ls(K.SUPA_URL), anon = ls(K.SUPA_ANON);
+  if (!url || !anon) return;
+  try { supaClient = window.supabase.createClient(url, anon); setSync(true); } catch(e) { supaClient = null; }
 }
 
-// ── LOCAL FALLBACK STORAGE ──────────────────────────────
-function saveChecklistLocal() { localStorage.setItem('sb_checklist', JSON.stringify(checklistItems)); }
-function savePushedLocal() { localStorage.setItem('sb_pushed', JSON.stringify(pushedItems)); }
-function loadLocal() {
-  try { checklistItems = JSON.parse(localStorage.getItem('sb_checklist') || '[]'); } catch(e) { checklistItems = []; }
-  try { pushedItems = JSON.parse(localStorage.getItem('sb_pushed') || '[]'); } catch(e) { pushedItems = []; }
+function setSync(live) {
+  document.getElementById('syncDot').className = 'sync-dot'+(live?' live':'');
+  document.getElementById('syncLabel').textContent = live ? 'Synced' : 'Local Only';
 }
 
-// ── CLOUD SYNC (if configured) ──────────────────────────
-async function loadFromCloud() {
-  if (!supaClient) { loadLocal(); return; }
-  try {
-    const { data, error } = await supaClient.from('flightbrief_state').select('*').eq('device_id', deviceId).maybeSingle();
-    if (error) { console.error('Supabase load error:', error); loadLocal(); return; }
-    if (data) {
-      checklistItems = data.checklist || [];
-      pushedItems = data.pushed || [];
-    } else {
-      // No row yet for this device — that's fine, start fresh and create it on first save
-      loadLocal();
-    }
-  } catch(e) { console.error('Supabase load exception:', e); loadLocal(); }
+function ls(k) { return localStorage.getItem(k); }
+function lss(k,v) { localStorage.setItem(k,v); }
+function lsr(k) { localStorage.removeItem(k); }
+
+async function loadData() {
+  if (supaClient) {
+    try {
+      const {data,error} = await supaClient.from('flightbrief_state').select('*').eq('device_id',DEVICE_ID).maybeSingle();
+      if (!error && data) {
+        checklistItems = data.checklist||[];
+        pushedItems = data.pushed||[];
+        projects = data.projects||defaultProjects();
+        plays = data.plays||defaultPlays();
+        return;
+      }
+    } catch(e) { console.error('Load failed',e); }
+  }
+  try { checklistItems = JSON.parse(ls(K.CL)||'[]'); } catch(e) { checklistItems=[]; }
+  try { pushedItems = JSON.parse(ls(K.PUSHED)||'[]'); } catch(e) { pushedItems=[]; }
+  try { projects = JSON.parse(ls(K.PROJECTS)||'null')||defaultProjects(); } catch(e) { projects=defaultProjects(); }
+  try { plays = JSON.parse(ls(K.PLAYS)||'null')||defaultPlays(); } catch(e) { plays=defaultPlays(); }
 }
 
-async function saveToCloud() {
-  saveChecklistLocal(); savePushedLocal();
+async function saveData() {
+  lss(K.CL,JSON.stringify(checklistItems));
+  lss(K.PUSHED,JSON.stringify(pushedItems));
+  lss(K.PROJECTS,JSON.stringify(projects));
+  lss(K.PLAYS,JSON.stringify(plays));
   if (!supaClient) return;
   try {
-    const { error } = await supaClient.from('flightbrief_state').upsert({
-      device_id: deviceId, checklist: checklistItems, pushed: pushedItems, updated_at: new Date().toISOString()
-    }, { onConflict: 'device_id' });
-    if (error) { console.error('Supabase save error:', error); alert('Sync save failed: ' + error.message); }
-  } catch(e) { console.error('Cloud sync exception:', e); alert('Sync save failed: ' + e.message); }
+    const {error} = await supaClient.from('flightbrief_state').upsert(
+      {device_id:DEVICE_ID,checklist:checklistItems,pushed:pushedItems,projects:projects,plays:plays,updated_at:new Date().toISOString()},
+      {onConflict:'device_id'}
+    );
+    if (error) console.error('Save error:',error.message);
+  } catch(e) { console.error('Save failed',e); }
 }
 
-// ── MODE / RENDER ROUTER ────────────────────────────────
-function setMode(m) {
-  mode = m; generated = false; briefText = ''; errorMsg = '';
-  document.getElementById('glow').className = 'glow ' + m;
-  render();
+function defaultPlays() {
+  return [
+    {id:1,name:'Lead Gen Scraper Bot',status:'active',note:'First deployment attempted. Resume or pivot decision pending.',tag:'Play 1'},
+    {id:2,name:'Cold Email Outreach Funnel',status:'pending',note:'AI website analysis → personalized cold email. Next after bot.',tag:'Play 2'},
+    {id:3,name:'AI Home Valuation Tool',status:'active',note:'Built. Rentcast API integration pending for live comp accuracy.',tag:'Play 3'},
+    {id:4,name:'Appointment Setting System',status:'pending',note:'Current phase — conversations over code. Client #3 is the target.',tag:'Play 4'},
+  ];
 }
 
-function render() {
-  const content = document.getElementById('appContent');
-  if (!getKey()) { renderSetup(); return; }
-  if (loading) { renderLoading(); return; }
-  if (errorMsg) { renderError(); return; }
-  if (generated) { renderBriefScreen(); return; }
-  renderForm();
+function defaultProjects() {
+  return [
+    {id:1,name:'Sea-Doo #2 — Final restoration',pct:70,notes:'Fuel pump installed. Fire-up test pending.'},
+    {id:2,name:'Sea-Doo #3 — Carb reinstall',pct:50,notes:'Carbs rebuilt. Reinstall and test remaining.'},
+    {id:3,name:'Sea-Doo #4 — Motor swap',pct:20,notes:'New motor on bench. Old motor removal first.'},
+    {id:4,name:'Mom — Discharge transition',pct:60,notes:'Discharge expected ~2 weeks. Coordinating home health and family.'},
+    {id:5,name:'Anniversary trip — October',pct:30,notes:'Playa del Carmen booked. Vow renewal TBD — possibly scaled back.'},
+  ];
 }
 
-// ── SETUP ───────────────────────────────────────────────
+// ── TAB NAV ────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  document.getElementById('content-'+tab).classList.add('active');
+}
+
+// ── RENDER ALL ─────────────────────────────────────────────────────────
+function renderAll() {
+  if (!ls(K.API)) { renderSetup(); return; }
+  renderToday();
+  renderBusiness();
+  renderLife();
+}
+
+// ── SETUP ──────────────────────────────────────────────────────────────
 function renderSetup() {
-  document.getElementById('appContent').innerHTML = `
-    <div class="setup-card">
-      <div class="setup-icon">🔑</div>
-      <h2>One-Time Setup</h2>
-      <p>Enter your Anthropic API key to activate your Flight Brief.</p>
-      <div class="field">
-        <label>Anthropic API Key</label>
-        <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-..." />
+  document.getElementById('todayMain').innerHTML = `
+    <div style="padding-top:0.5rem">
+      <div style="font-size:2.2rem;text-align:center;margin:1rem 0">🔑</div>
+      <div class="setup-card">
+        <div class="setup-title">Activate Flight Brief</div>
+        <p class="setup-sub">Enter all credentials below, then tap Activate. Fill in Supabase fields for live sync across all devices.</p>
+        <div class="form-field"><label>Anthropic API Key</label><input type="password" id="sApiKey" placeholder="sk-ant-api03-..." /></div>
+        <div class="form-field"><label>Supabase Project URL</label><input type="text" id="sSupaUrl" placeholder="https://xxxxx.supabase.co" /></div>
+        <div class="form-field"><label>Supabase Anon Key</label><input type="password" id="sSupaAnon" placeholder="eyJhbG..." /></div>
+        <button class="btn btn-primary" onclick="handleActivate()">🛫 Activate Flight Brief</button>
+        <p class="setup-note">Anthropic key: console.anthropic.com → API Keys<br>Supabase: supabase.com → Project → Settings → API<br>Leave Supabase blank for device-only storage.</p>
       </div>
-      <p class="setup-note">Get your key at console.anthropic.com → API Keys.</p>
-    </div>
-    <div class="setup-card">
-      <div class="setup-icon">☁️</div>
-      <h2>Optional: Live Sync</h2>
-      <p>Add Supabase credentials to sync your checklist across desktop and phone in real time. Leave blank to use device-only storage.</p>
-      <div class="field">
-        <label>Supabase Project URL</label>
-        <input type="text" id="supaUrlInput" placeholder="https://xxxxx.supabase.co" />
-      </div>
-      <div class="field">
-        <label>Supabase Anon Key</label>
-        <input type="password" id="supaAnonInput" placeholder="eyJhbG..." />
-      </div>
-      <p class="setup-note">Get free credentials at supabase.com → New Project → Settings → API</p>
-    </div>
-    <button class="btn-save" onclick="handleSaveAll()">🛫 Activate Flight Brief</button>`;
-}
-
-function handleSaveAll() {
-  const apiVal = document.getElementById('apiKeyInput')?.value?.trim();
-  const supaUrl = document.getElementById('supaUrlInput')?.value?.trim();
-  const supaAnon = document.getElementById('supaAnonInput')?.value?.trim();
-
-  if (!apiVal || !apiVal.startsWith('sk-')) { alert('Please enter a valid Anthropic API key starting with sk-'); return; }
-  saveKey(apiVal);
-
-  if (supaUrl && supaAnon) {
-    saveSupaConfig(supaUrl, supaAnon);
-    initSupabase();
-  } else if (supaUrl || supaAnon) {
-    alert('To enable live sync, fill in BOTH the Supabase URL and Anon Key. Leaving both blank is fine too — you can add sync later via "Reset API Key / Sync Settings."');
-  }
-
-  loadLocal();
-  init();
-}
-
-// ── LOADING / ERROR ──────────────────────────────────────
-function renderLoading() {
-  document.getElementById('appContent').innerHTML = `
-    <div class="loading-wrap">
-      <div class="spinner ${mode}"></div>
-      <div class="loading-text">${mode === 'morning' ? 'Preparing your mission briefing...' : 'Running shutdown ritual...'}</div>
     </div>`;
 }
 
-function renderError() {
-  document.getElementById('appContent').innerHTML = `
-    <div class="error-card">
-      <div class="error-title">⚠️ Brief Generation Failed</div>
-      <div class="error-msg">${errorMsg}</div>
-      <div class="btn-row">
-        <button class="btn-secondary" onclick="resetForm()">← Back</button>
-        <button class="btn-secondary btn-regen-${mode}" onclick="retryGenerate()">↻ Try Again</button>
-      </div>
-    </div>
-    <button class="reset-key" onclick="handleResetKey()">Reset API Key</button>`;
+async function handleActivate() {
+  const api = document.getElementById('sApiKey')?.value?.trim();
+  const url = document.getElementById('sSupaUrl')?.value?.trim();
+  const anon = document.getElementById('sSupaAnon')?.value?.trim();
+  if (!api||!api.startsWith('sk-')) { alert('Valid Anthropic API key required.'); return; }
+  lss(K.API,api);
+  if (url&&anon) { lss(K.SUPA_URL,url); lss(K.SUPA_ANON,anon); initSupa(); }
+  await loadData();
+  renderAll();
 }
 
-// ── CHECKLIST PARSING ────────────────────────────────────
-function parseChecklist(text) {
-  const lines = text.split('\n');
-  const items = [];
-  let inChecklist = false;
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (/^#{0,3}\s*\*{0,2}CHECKLIST:?\*{0,2}$/i.test(trimmed)) { inChecklist = true; continue; }
-    if (inChecklist) {
-      const match = trimmed.match(/^\*{0,2}\[(HIGH|MED|LOW)\]\*{0,2}\s+(.+)$/i);
-      if (match) items.push({ id: Date.now() + Math.random(), text: match[2].replace(/\*\*/g,'').trim(), priority: match[1].toUpperCase(), done: false, added: false });
-      else if (trimmed === '') continue;
-      else if (trimmed.startsWith('#') || trimmed.startsWith('---')) break;
+function handleReset() {
+  if (!confirm('Clear credentials? Your Supabase data remains safe.')) return;
+  [K.API,K.SUPA_URL,K.SUPA_ANON].forEach(k=>lsr(k));
+  supaClient=null; setSync(false); renderSetup();
+}
+
+// ── TODAY ──────────────────────────────────────────────────────────────
+function renderToday() {
+  const el = document.getElementById('todayMain');
+  if (!el) return;
+  if (briefLoading) { el.innerHTML = `<div class="loading-wrap"><div class="spinner ${briefMode==='evening'?'eve':''}"></div><div class="loading-txt">${briefMode==='morning'?'Preparing mission briefing...':'Running shutdown ritual...'}</div></div>`; return; }
+
+  let html = '';
+
+  // Checklist always at top if exists
+  if (checklistItems.length>0) {
+    const done = checklistItems.filter(i=>i.done).length;
+    html += `<div class="checklist-wrap"><div class="card" style="border-color:rgba(5,150,105,0.2)"><div class="card-body" style="padding:1.1rem">
+      <div class="cl-header"><div class="cl-title">📋 Today's Checklist</div><div class="cl-progress" id="clProg">${done}/${checklistItems.length} done</div></div>
+      <div class="cl-items" id="clItems"></div>
+      <div class="add-row"><input type="text" class="add-input" id="clAdd" placeholder="Add a task..." onkeydown="if(event.key==='Enter')addCL()" /><button class="add-btn" onclick="addCL()">+ Add</button></div>
+    </div></div></div>`;
+  }
+
+  // Pushed list always visible
+  html += `<div class="pushed-wrap"><div class="pushed-card">
+    <div class="pushed-hdr"><div class="pushed-title">🔄 Pushed List</div><div class="pushed-count" id="pushedCount">${pushedItems.length} active</div></div>
+    <div class="pushed-body" id="pushedBody"></div>
+  </div></div>`;
+
+  // Error
+  if (briefError) {
+    html += `<div class="error-box"><div class="error-title">⚠️ Brief Failed</div><div class="error-msg">${briefError}</div>
+      <div class="btn-row"><button class="btn-sm" onclick="resetBrief()">← Back</button><button class="btn-sm btn-sm-${briefMode}" onclick="resetBrief()">↻ Try Again</button></div></div>`;
+  }
+
+  // Brief output
+  if (briefGenerated&&briefText&&!briefError) {
+    html += `<div class="brief-output ${briefMode}">
+      <div class="brief-stamp ${briefMode}">${briefMode==='morning'?'▶ MORNING BRIEF — CLEARED FOR DEPARTURE':'▶ SHUTDOWN RITUAL — WHEELS DOWN'}</div>
+      <div id="briefBody"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-sm" onclick="resetBrief()">← New Brief</button>
+      <button class="btn-sm btn-sm-${briefMode}" onclick="regenBrief()">↻ Regenerate</button>
+    </div>`;
+  }
+
+  // Form
+  if (!briefGenerated||briefError) {
+    const isEve = briefMode==='evening';
+    html += `<div class="section-label">Generate Brief</div>
+    <div class="mode-toggle">
+      <button class="mode-btn ${briefMode==='morning'?'active-morning':''}" onclick="setMode('morning')">🌅 Morning Brief</button>
+      <button class="mode-btn ${briefMode==='evening'?'active-evening':''}" onclick="setMode('evening')">🌙 Evening Shutdown</button>
+    </div>
+    <div class="form-field"><label>${isEve?"📅 Tomorrow's Calendar":"📅 Today's Calendar / Flights"}</label>
+      <textarea id="fCal" rows="3" placeholder="${isEve?'e.g. 0530 show time, 0800 PHL→MIA':'e.g. 0800 PHL→BOS, 1400 hockey'}"></textarea></div>
+    <div class="form-field"><label>${isEve?"📋 What Didn't Get Done":"⚡ Tasks & Priorities"}</label>
+      <textarea id="fTasks" rows="3" placeholder="${isEve?"Items that didn't get done...":'e.g. gym, iMark call, Sea-Doo carb reinstall'}"></textarea></div>
+    ${isEve?`<div class="form-field"><label>✅ What Got Done Today</label><textarea id="fDone" rows="3" placeholder="What you accomplished..."></textarea></div>`:''}
+    <div class="form-field"><label>🗒️ Notes / Context</label><textarea id="fNotes" rows="2" placeholder="Anything else..."></textarea></div>
+    ${pushedItems.length>0?`<div style="background:var(--amber-light);border:1px solid rgba(217,119,6,0.2);border-radius:7px;padding:0.65rem 0.85rem;margin-bottom:0.85rem">
+      <div style="font-family:var(--font-display);font-size:0.52rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--amber);margin-bottom:0.3rem">🔄 Pushed items auto-included</div>
+      ${pushedItems.map(i=>`<div style="font-size:0.8rem;color:var(--muted)">• ${i.text} (Day ${i.pushCount})</div>`).join('')}
+    </div>`:''}
+    <button class="btn btn-${briefMode}" onclick="generateBrief()">${briefMode==='morning'?'🛫 Generate Morning Brief':'🛬 Run Shutdown Ritual'}</button>`;
+  }
+
+  el.innerHTML = html;
+  if (checklistItems.length>0) renderCLItems();
+  renderPushedItems();
+  if (briefGenerated&&briefText) renderBriefBody();
+}
+
+function renderCLItems() {
+  const el = document.getElementById('clItems'); if (!el) return;
+  el.innerHTML = checklistItems.map(item=>`
+    <div class="cl-item ${item.done?'done':''}">
+      <div class="cl-check" onclick="toggleCL('${item.id}')"><span class="cl-checkmark">✓</span></div>
+      <div class="cl-text" onclick="toggleCL('${item.id}')">${item.text}</div>
+      <div class="cl-tag ${item.added?'tag-ADD':'tag-'+item.priority}">${item.added?'ADD':item.priority}</div>
+      ${!item.done?`<div class="cl-push" onclick="openPush('${item.id}')" title="Push to tomorrow">→</div>`:''}
+    </div>`).join('');
+}
+
+function renderPushedItems() {
+  const el = document.getElementById('pushedBody'); if (!el) return;
+  if (pushedItems.length===0) { el.innerHTML='<div class="pushed-empty">Clean board — nothing pushed.</div>'; return; }
+  el.innerHTML = pushedItems.map(i=>`
+    <div class="pushed-item" onclick="completePushed('${i.id}')">
+      <div class="pushed-circle"></div>
+      <div class="pushed-content">
+        <div class="pushed-text">${i.text}</div>
+        <div class="pushed-meta"><span class="day-badge">Day ${i.pushCount}</span>${i.reason?`<span class="pushed-reason">${i.reason}</span>`:''}</div>
+      </div>
+    </div>`).join('');
+}
+
+function renderBriefBody() {
+  const el = document.getElementById('briefBody'); if (!el) return;
+  const clean = stripCL(briefText);
+  const rx = /^[🌅🌙✈️📋⚡🎯🔍📌🏁✅❌⚠️🛬🛫🗒️💡🔥👊☀️🚀🏒⛳🔧💼🚤🧠📊🏡]/u;
+  el.innerHTML = clean.split('\n').map(l=>{
+    if (!l.trim()) return '<div class="brief-gap"></div>';
+    if (l.match(/^#{1,3}\s/)) return `<div class="brief-section ${briefMode}">${l.replace(/^#+\s*/,'')}</div>`;
+    if (rx.test(l.trim())) return `<div class="brief-section ${briefMode}">${l}</div>`;
+    return `<div class="brief-line">${l.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')}</div>`;
+  }).join('');
+}
+
+// ── CHECKLIST ACTIONS ──────────────────────────────────────────────────
+function toggleCL(id) {
+  const item = checklistItems.find(i=>String(i.id)===String(id));
+  if (item) { item.done=!item.done; saveData(); renderCLItems(); const p=document.getElementById('clProg'); if(p){const d=checklistItems.filter(i=>i.done).length;p.textContent=`${d}/${checklistItems.length} done`;} }
+}
+
+function addCL() {
+  const inp=document.getElementById('clAdd'); if (!inp?.value?.trim()) return;
+  checklistItems.push({id:Date.now(),text:inp.value.trim(),priority:'MED',done:false,added:true});
+  saveData(); inp.value=''; renderCLItems();
+  const p=document.getElementById('clProg'); if(p){const d=checklistItems.filter(i=>i.done).length;p.textContent=`${d}/${checklistItems.length} done`;}
+}
+
+// ── PUSH MODAL ─────────────────────────────────────────────────────────
+function openPush(id) {
+  pushModalItem = checklistItems.find(i=>String(i.id)===String(id)); if (!pushModalItem) return;
+  const ov=document.createElement('div'); ov.className='modal-overlay'; ov.id='pushOv';
+  ov.innerHTML=`<div class="modal-box">
+    <div class="modal-title">Push to Tomorrow</div>
+    <div class="modal-task">${pushModalItem.text}</div>
+    <input type="text" class="modal-input" id="pushReason" placeholder="Why? (optional)" />
+    <div class="modal-btns">
+      <button class="modal-btn modal-cancel" onclick="closePush()">Cancel</button>
+      <button class="modal-btn modal-confirm" onclick="confirmPush()">→ Push It</button>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+}
+
+function closePush() { document.getElementById('pushOv')?.remove(); pushModalItem=null; }
+
+function confirmPush() {
+  if (!pushModalItem) return;
+  const reason=document.getElementById('pushReason')?.value?.trim()||'';
+  const ex=pushedItems.find(p=>p.text===pushModalItem.text);
+  if (ex) { ex.pushCount++; if(reason) ex.reason=reason; }
+  else pushedItems.push({id:Date.now()+Math.random(),text:pushModalItem.text,pushCount:1,reason});
+  checklistItems=checklistItems.filter(i=>String(i.id)!==String(pushModalItem.id));
+  saveData(); closePush(); renderToday();
+}
+
+function completePushed(id) {
+  pushedItems=pushedItems.filter(i=>String(i.id)!==String(id));
+  saveData(); renderPushedItems();
+  const el=document.getElementById('pushedCount'); if(el) el.textContent=`${pushedItems.length} active`;
+}
+
+// ── BRIEF GENERATION ───────────────────────────────────────────────────
+function setMode(m) { briefMode=m; briefGenerated=false; briefText=''; briefError=''; renderToday(); }
+function resetBrief() { briefGenerated=false; briefText=''; briefError=''; renderToday(); }
+function regenBrief() { briefGenerated=false; renderToday(); setTimeout(generateBrief,80); }
+
+function parseCL(text) {
+  const items=[]; let inCL=false;
+  for (const line of text.split('\n')) {
+    const t=line.trim();
+    if (/^#{0,3}\s*\*{0,2}CHECKLIST:?\*{0,2}\s*$/i.test(t)) { inCL=true; continue; }
+    if (inCL) {
+      const m=t.match(/^\*{0,2}\[(HIGH|MED|LOW)\]\*{0,2}\s+(.+)$/i);
+      if (m) items.push({id:Date.now()+Math.random(),text:m[2].replace(/\*\*/g,'').trim(),priority:m[1].toUpperCase(),done:false,added:false});
+      else if (t==='') continue;
+      else if (t.startsWith('#')||t.startsWith('---')) break;
     }
   }
   return items;
 }
 
-function stripChecklist(text) {
-  const upper = text.toUpperCase();
-  const markers = ['\nCHECKLIST:', '\n## CHECKLIST', '\n**CHECKLIST**', '\n### CHECKLIST'];
-  for (const m of markers) {
-    const idx = upper.indexOf(m.toUpperCase());
-    if (idx !== -1) return text.substring(0, idx).trim();
+function stripCL(text) {
+  const u=text.toUpperCase();
+  for (const m of ['\nCHECKLIST:','\n## CHECKLIST','\n**CHECKLIST**','\n### CHECKLIST']) {
+    const idx=u.indexOf(m.toUpperCase()); if (idx!==-1) return text.substring(0,idx).trim();
   }
-  return text.split('\n').filter(l => !/^\*{0,2}\[(HIGH|MED|LOW)\]/i.test(l.trim())).join('\n').trim();
+  return text.split('\n').filter(l=>!/^\*{0,2}\[(HIGH|MED|LOW)\]/i.test(l.trim())).join('\n').trim();
 }
 
-// ── BRIEF SCREEN ──────────────────────────────────────────
-function renderBriefScreen() {
-  const content = document.getElementById('appContent');
-  const done = checklistItems.filter(i => i.done).length;
-  const total = checklistItems.length;
-
-  content.innerHTML = `
-    <div class="brief-card ${mode}">
-      <div class="brief-header ${mode}">
-        ${mode === 'morning' ? '▶ MORNING BRIEF — CLEARED FOR DEPARTURE' : '▶ SHUTDOWN RITUAL — WHEELS DOWN'}
-      </div>
-      <div class="brief-body" id="briefBody"></div>
-    </div>
-
-    ${checklistItems.length > 0 ? `
-    <div class="checklist-card">
-      <div class="checklist-header">
-        <div class="checklist-title">📋 Today's Ops Checklist</div>
-        <div class="checklist-progress">${done}/${total} complete</div>
-      </div>
-      <div class="checklist-items" id="checklistItems"></div>
-      <div class="add-task-row">
-        <input type="text" class="add-task-input" id="newTaskInput" placeholder="Add a task..." onkeydown="if(event.key==='Enter')addTask()" />
-        <button class="btn-add-task" onclick="addTask()">+ Add</button>
-      </div>
-    </div>` : `
-    <div class="checklist-card">
-      <div class="checklist-header"><div class="checklist-title">📋 Ops Checklist</div></div>
-      <div class="add-task-row">
-        <input type="text" class="add-task-input" id="newTaskInput" placeholder="Add a task manually..." onkeydown="if(event.key==='Enter')addTask()" />
-        <button class="btn-add-task" onclick="addTask()">+ Add</button>
-      </div>
-    </div>`}
-
-    ${renderPushedListHTML()}
-
-    <div class="btn-row">
-      <button class="btn-secondary" onclick="resetForm()">← New Brief</button>
-      <button class="btn-secondary ${mode==='morning'?'btn-regen-morning':'btn-regen-evening'}" onclick="regenerate()">↻ Regenerate</button>
-    </div>
-    <button class="reset-key" onclick="handleResetKey()">Reset API Key / Sync Settings</button>`;
-
-  const emojiRegex = /^[🌅🌙✈️📋⚡🎯🔍📌🏁✅❌⚠️🛬🛫🗒️💡🔥👊☀️🚀🏒⛳🔧💼🚤]/u;
-  document.getElementById('briefBody').innerHTML = stripChecklist(briefText).split('\n').map(line => {
-    if (!line.trim()) return '<div class="brief-spacer"></div>';
-    if (line.startsWith('#')) return `<div class="brief-section-title ${mode}">${line.replace(/^#+\s*/, '')}</div>`;
-    if (emojiRegex.test(line.trim())) return `<div class="brief-section-title ${mode}">${line}</div>`;
-    return `<div class="brief-line">${line.replace(/\*\*(.*?)\*\*/g,'<strong style="color:#1a2332">$1</strong>')}</div>`;
-  }).join('');
-
-  renderChecklistItems();
+async function generateBrief() {
+  const cal=document.getElementById('fCal')?.value||'';
+  const tasks=document.getElementById('fTasks')?.value||'';
+  const done=document.getElementById('fDone')?.value||'';
+  const notes=document.getElementById('fNotes')?.value||'';
+  lastInputs={cal,tasks,done,notes};
+  const pc=pushedItems.length>0?'\n\nPUSHED ITEMS:\n'+pushedItems.map(i=>`- ${i.text} (pushed ${i.pushCount}x${i.reason?', reason: '+i.reason:''})`).join('\n'):'';
+  const prompt=briefMode==='morning'
+    ?`Generate my MORNING BRIEF.\n\nCalendar/flights:\n${cal||'None'}\n\nTasks & priorities:\n${tasks||'None'}${pc}\n\nNotes:\n${notes||'None'}\n\nEnd with the CHECKLIST section.`
+    :`Generate my EVENING SHUTDOWN BRIEF.\n\nAccomplished:\n${done||'Not specified'}\n\nDidn't get done:\n${tasks||'None'}${pc}\n\nTomorrow:\n${cal||'None'}\n\nNotes:\n${notes||'None'}\n\nEnd with the CHECKLIST section for tomorrow.`;
+  briefLoading=true; briefError=''; briefGenerated=false;
+  renderToday();
+  try {
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':ls(K.API),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:2500,system:SYSTEM_PROMPT,messages:[{role:'user',content:prompt}]})
+    });
+    if (!res.ok) { const e=await res.json().catch(()=>({})); throw new Error(e.error?.message||`API error ${res.status}`); }
+    const data=await res.json();
+    if (data.error) throw new Error(data.error.message);
+    briefText=data.content?.map(b=>b.text||'').join('')||'';
+    if (!briefText) throw new Error('Empty response. Please try again.');
+    if (briefMode==='evening') {
+      checklistItems.filter(i=>!i.done).forEach(item=>{
+        const ex=pushedItems.find(p=>p.text===item.text);
+        if (ex) ex.pushCount++;
+        else pushedItems.push({id:Date.now()+Math.random(),text:item.text,pushCount:1,reason:'Not completed at shutdown'});
+      });
+      checklistItems=[];
+    }
+    const parsed=parseCL(briefText);
+    if (parsed.length>0) checklistItems=parsed;
+    await saveData();
+    briefLoading=false; briefGenerated=true; renderToday();
+  } catch(e) {
+    briefLoading=false;
+    briefError=e.message.includes('invalid_api_key')||e.message.includes('authentication')?'Invalid API key. Use Reset / Update Credentials.':e.message.includes('rate_limit')?'Rate limit. Wait 30 seconds.':e.message.includes('overloaded')?'API busy. Wait a moment.':e.message+'. Check connection.';
+    renderToday();
+  }
 }
 
-function renderChecklistItems() {
-  const container = document.getElementById('checklistItems');
-  if (!container) return;
-  container.innerHTML = checklistItems.map(item => `
-    <div class="checklist-item ${item.done ? 'done' : ''}">
-      <div class="check-box" onclick="toggleItem('${item.id}')"><span class="check-icon">✓</span></div>
-      <div class="check-text" onclick="toggleItem('${item.id}')">${item.text}</div>
-      <div class="check-tag ${item.added ? 'tag-added' : item.priority === 'HIGH' ? 'tag-high' : item.priority === 'MED' ? 'tag-med' : 'tag-low'}">
-        ${item.added ? 'added' : item.priority}
-      </div>
-      ${!item.done ? `<div class="push-btn" onclick="openPushModal('${item.id}')" title="Push to tomorrow">→</div>` : ''}
-    </div>`).join('');
-}
-
-// ── PUSHED LIST ───────────────────────────────────────────
-function renderPushedListHTML() {
-  return `
-    <div class="pushed-card">
-      <div class="pushed-header">
-        <div class="pushed-title">🔄 Pushed List</div>
-        <div class="pushed-count">${pushedItems.length} active</div>
-      </div>
-      <div id="pushedItemsList">${renderPushedItemsInner()}</div>
-    </div>`;
-}
-
-function renderPushedItemsInner() {
-  if (pushedItems.length === 0) return '<div class="pushed-empty">Nothing on the pushed list. Clean board.</div>';
-  return pushedItems.map(item => `
-    <div class="pushed-item" onclick="completePushedItem('${item.id}')">
-      <div class="pushed-check"></div>
-      <div class="pushed-content">
-        <div class="pushed-text">${item.text}</div>
-        <div class="pushed-meta">
-          <span class="pushed-day-badge">Day ${item.pushCount}</span>
-          ${item.reason ? `<span class="pushed-reason">${item.reason}</span>` : ''}
+// ── BUSINESS HQ ────────────────────────────────────────────────────────
+function renderBusiness() {
+  const el=document.getElementById('businessMain'); if (!el) return;
+  el.innerHTML=`
+    <div class="section-label">Tyler Lordi's Master Playbook</div>
+    <div class="card">
+      <div class="card-header" onclick="toggleCard(this)">
+        <div class="card-header-left"><span style="font-size:1rem">🎯</span><span class="card-title">Playbook Plays</span></div>
+        <div style="display:flex;gap:0.5rem;align-items:center">
+          <span class="card-badge" style="background:var(--green-light);color:var(--green)">${plays.filter(p=>p.status==='active').length} Active</span>
+          <span class="card-chevron">▾</span>
         </div>
       </div>
+      <div class="card-body">
+        <div id="playsContainer"></div>
+        <button class="btn btn-green" style="margin-top:0.5rem;padding:0.65rem" onclick="addPlay()">+ Add Play</button>
+      </div>
+    </div>
+    <div class="section-label">Client Pipeline</div>
+    <div class="card">
+      <div class="card-header" onclick="toggleCard(this)">
+        <div class="card-header-left"><span style="font-size:1rem">👥</span><span class="card-title">Active Clients</span></div>
+        <span class="card-chevron">▾</span>
+      </div>
+      <div class="card-body">
+        <div class="client-card"><div class="client-name">Jim Dietrich — Realty ONE Group Supreme</div><div class="client-status">Bucks County real estate lead gen + AI valuation tool</div><div class="client-action">⚡ Follow up on pipeline status</div></div>
+        <div class="client-card"><div class="client-name">Penn Flight Academy</div><div class="client-status">Website + SEO — active, maintain</div><div class="client-action">✅ Holding steady</div></div>
+        <div class="client-card"><div class="client-name">CommercialMultiEngine.com</div><div class="client-status">Active — maintain current work</div><div class="client-action">✅ Holding steady</div></div>
+        <div class="client-card" style="border-color:rgba(217,119,6,0.2)"><div class="client-name">iMark / Abby</div><div class="client-status">Relationship shrinking — leaving in place</div><div class="client-action">⚠️ Transition ongoing</div></div>
+        <div class="client-card" style="border-style:dashed;background:transparent"><div class="client-name" style="color:var(--muted)">Client #3 — Target</div><div class="client-status">Appointment setting in progress</div><div class="client-action">🎯 This is the mission</div></div>
+      </div>
+    </div>
+    <div class="section-label">Infrastructure Builds</div>
+    <div class="card">
+      <div class="card-header" onclick="toggleCard(this)">
+        <div class="card-header-left"><span style="font-size:1rem">🔧</span><span class="card-title">Build Pipeline</span></div>
+        <span class="card-chevron">▾</span>
+      </div>
+      <div class="card-body">
+        <div class="playbook-item"><div class="playbook-status status-active"></div><div class="playbook-content"><div class="playbook-name">AI Home Valuation Tool</div><div class="playbook-note">Built. Rentcast API pending for live comp accuracy. buckcountyparealestate.net</div></div></div>
+        <div class="playbook-item"><div class="playbook-status status-pending"></div><div class="playbook-content"><div class="playbook-name">Rank & Rent SEO Sites</div><div class="playbook-note">Crawl space encapsulation niche. Knoxville, Greensboro, Columbia markets.</div></div></div>
+        <div class="playbook-item"><div class="playbook-status status-pending"></div><div class="playbook-content"><div class="playbook-name">BucksCountyPARealEstate.net Rebuild</div><div class="playbook-note">Full site rebuild and relaunch under consideration.</div></div></div>
+      </div>
+    </div>`;
+  renderPlays();
+}
+
+function renderPlays() {
+  const el=document.getElementById('playsContainer'); if (!el) return;
+  const sc={active:'var(--green)',pending:'var(--amber)',paused:'var(--subtle)'};
+  el.innerHTML=plays.map(p=>`
+    <div class="playbook-item">
+      <div class="playbook-status" style="background:${sc[p.status]||'var(--subtle)'}"></div>
+      <div class="playbook-content">
+        <div class="playbook-name">${p.name}</div>
+        <div style="display:flex;gap:0.4rem;margin:0.4rem 0;align-items:center;flex-wrap:wrap">
+          <div class="playbook-tag">${p.tag}</div>
+          <select class="play-select" onchange="updatePlayStatus(${p.id},this.value)">
+            <option value="active" ${p.status==='active'?'selected':''}>Active</option>
+            <option value="pending" ${p.status==='pending'?'selected':''}>Pending</option>
+            <option value="paused" ${p.status==='paused'?'selected':''}>Paused</option>
+          </select>
+        </div>
+        <textarea class="notes-textarea" placeholder="Play notes..." onblur="updatePlayNote(${p.id},this.value)">${p.note||''}</textarea>
+      </div>
     </div>`).join('');
 }
 
-function refreshPushedList() {
-  const el = document.getElementById('pushedItemsList');
-  if (el) el.innerHTML = renderPushedItemsInner();
-  const countEl = document.querySelector('.pushed-count');
-  if (countEl) countEl.textContent = `${pushedItems.length} active`;
+function updatePlayStatus(id,status) {
+  const p=plays.find(x=>x.id===id); if(p){p.status=status;saveData();renderBusiness();}
 }
-
-function completePushedItem(id) {
-  pushedItems = pushedItems.filter(i => String(i.id) !== String(id));
-  saveToCloud();
-  refreshPushedList();
+function updatePlayNote(id,note) {
+  const p=plays.find(x=>x.id===id); if(p&&note!==p.note){p.note=note;saveData();}
 }
+function addPlay() {
+  const name=prompt('Play name:'); if (!name?.trim()) return;
+  plays.push({id:Date.now(),name:name.trim(),status:'pending',note:'',tag:`Play ${plays.length+1}`});
+  saveData(); renderBusiness();
+}
+function toggleCard(hdr) { hdr.closest('.card').classList.toggle('collapsed'); }
 
-// ── PUSH MODAL ────────────────────────────────────────────
-function openPushModal(itemId) {
-  const item = checklistItems.find(i => String(i.id) === String(itemId));
-  if (!item) return;
-  pushModalTask = item;
-  const overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
-  overlay.id = 'pushModalOverlay';
-  overlay.innerHTML = `
-    <div class="modal-card">
-      <div class="modal-title">Push to Tomorrow</div>
-      <div class="modal-task">${item.text}</div>
-      <input type="text" class="modal-input" id="pushReasonInput" placeholder="Why? (optional)" />
-      <div class="modal-btn-row">
-        <button class="modal-btn modal-btn-cancel" onclick="closePushModal()">Cancel</button>
-        <button class="modal-btn modal-btn-confirm" onclick="confirmPush()">Push It</button>
+// ── LIFE OPS ───────────────────────────────────────────────────────────
+function renderLife() {
+  const el=document.getElementById('lifeMain'); if (!el) return;
+  el.innerHTML=`
+    <div class="section-label">Home Projects — One at a Time, 100% Before Next</div>
+    <div class="card">
+      <div class="card-header" onclick="toggleCard(this)">
+        <div class="card-header-left"><span style="font-size:1rem">🏠</span><span class="card-title">Project Queue</span></div>
+        <div style="display:flex;gap:0.5rem;align-items:center">
+          <span class="card-badge" style="background:var(--green-light);color:var(--green)">${projects.filter(p=>p.pct===100).length}/${projects.length} Done</span>
+          <span class="card-chevron">▾</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div id="projContainer"></div>
+        <div style="margin-top:0.75rem">
+          <button class="btn btn-primary" style="padding:0.65rem" onclick="toggleAddProj()">+ Add Project</button>
+          <div id="addProjForm" style="display:none;margin-top:0.75rem;background:var(--bg);border:1px dashed var(--border);border-radius:8px;padding:1rem">
+            <div class="form-field"><label>Project Name</label><input type="text" id="newProjName" placeholder="Project name..." /></div>
+            <div class="form-field"><label>Initial Notes</label><textarea id="newProjNotes" rows="2" placeholder="Context, notes..."></textarea></div>
+            <div class="btn-row">
+              <button class="btn-sm" onclick="toggleAddProj()">Cancel</button>
+              <button class="btn-sm" style="background:var(--indigo);color:#fff;border-color:var(--indigo)" onclick="saveNewProj()">Add</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="section-label">Sea-Doos — Shore Season Prep</div>
+    <div class="card">
+      <div class="card-header" onclick="toggleCard(this)">
+        <div class="card-header-left"><span style="font-size:1rem">🚤</span><span class="card-title">Fleet Status</span></div>
+        <span class="card-chevron">▾</span>
+      </div>
+      <div class="card-body">
+        ${[{n:1,s:'Mission Ready',p:100,note:"Staged at Dad's. Good to go."},{n:2,s:'Nearly Ready',p:85,note:'Fuel pump installed. Fire-up test pending.'},{n:3,s:'In Progress',p:50,note:'Carbs rebuilt. Reinstall and test remaining.'},{n:4,s:'Queued Last',p:20,note:'New motor on bench. Last in sequence.'}].map(ski=>`
+          <div class="project-item">
+            <div class="project-header"><div class="project-name">Sea-Doo #${ski.n} — ${ski.s}</div><div class="project-pct">${ski.p}%</div></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:${ski.p}%"></div></div>
+            <div class="project-notes">${ski.note}</div>
+          </div>`).join('')}
+        <div style="background:var(--amber-light);border:1px solid rgba(217,119,6,0.2);border-radius:7px;padding:0.65rem 0.85rem;margin-top:0.5rem">
+          <div style="font-family:var(--font-display);font-size:0.55rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--amber)">Trailer Goal</div>
+          <div style="font-size:0.83rem;color:var(--text);margin-top:0.2rem">Sell both single trailers → Buy second 2-place trailer</div>
+        </div>
+      </div>
+    </div>
+    <div class="section-label">Family</div>
+    <div class="card">
+      <div class="card-header" onclick="toggleCard(this)">
+        <div class="card-header-left"><span style="font-size:1rem">👨‍👩‍👧‍👦</span><span class="card-title">Family Ops</span></div>
+        <span class="card-chevron">▾</span>
+      </div>
+      <div class="card-body">
+        <div class="playbook-item"><div class="playbook-status status-active"></div><div class="playbook-content"><div class="playbook-name">Mom — Discharge from Pennsburg Manor</div><div class="playbook-note">Expected ~2 weeks. Coordinating home health and family. Red Hill, PA.</div><div class="playbook-tag">High Priority</div></div></div>
+        <div class="playbook-item"><div class="playbook-status status-pending"></div><div class="playbook-content"><div class="playbook-name">Anniversary Trip — October</div><div class="playbook-note">Playa del Carmen booked. Vow renewal TBD — possibly small group or cancelled. Decision pending.</div><div class="playbook-tag">October</div></div></div>
       </div>
     </div>`;
-  document.body.appendChild(overlay);
+  renderProjects();
 }
 
-function closePushModal() {
-  const overlay = document.getElementById('pushModalOverlay');
-  if (overlay) overlay.remove();
-  pushModalTask = null;
-}
-
-function confirmPush() {
-  if (!pushModalTask) return;
-  const reason = document.getElementById('pushReasonInput')?.value?.trim() || '';
-  const existing = pushedItems.find(p => p.text === pushModalTask.text);
-  if (existing) {
-    existing.pushCount += 1;
-    existing.reason = reason || existing.reason;
-  } else {
-    pushedItems.push({ id: Date.now() + Math.random(), text: pushModalTask.text, pushCount: 1, reason: reason });
-  }
-  checklistItems = checklistItems.filter(i => String(i.id) !== String(pushModalTask.id));
-  saveToCloud();
-  closePushModal();
-  renderChecklistItems();
-  refreshPushedList();
-  const total = checklistItems.length, done = checklistItems.filter(i=>i.done).length;
-  const progEl = document.querySelector('.checklist-progress');
-  if (progEl) progEl.textContent = `${done}/${total} complete`;
-}
-
-// ── TOGGLE / ADD ──────────────────────────────────────────
-function toggleItem(id) {
-  const item = checklistItems.find(i => String(i.id) === String(id));
-  if (item) { item.done = !item.done; saveToCloud(); renderChecklistItems(); updateProgress(); }
-}
-
-function updateProgress() {
-  const done = checklistItems.filter(i => i.done).length;
-  const total = checklistItems.length;
-  const el = document.querySelector('.checklist-progress');
-  if (el) el.textContent = `${done}/${total} complete`;
-}
-
-function addTask() {
-  const input = document.getElementById('newTaskInput');
-  if (!input || !input.value.trim()) return;
-  checklistItems.push({ id: Date.now(), text: input.value.trim(), priority: 'MED', done: false, added: true });
-  saveToCloud();
-  input.value = '';
-  renderChecklistItems();
-  updateProgress();
-}
-
-// ── END OF DAY RESET (called when evening brief is generated) ──
-function performEndOfDayReset() {
-  // Any unchecked items from the CURRENT checklist get pushed automatically
-  const unfinished = checklistItems.filter(i => !i.done);
-  unfinished.forEach(item => {
-    const existing = pushedItems.find(p => p.text === item.text);
-    if (existing) existing.pushCount += 1;
-    else pushedItems.push({ id: Date.now() + Math.random(), text: item.text, pushCount: 1, reason: 'Rolled at shutdown — not completed' });
-  });
-  checklistItems = [];
-  saveToCloud();
-}
-
-// ── FORM ──────────────────────────────────────────────────
-function renderForm() {
-  const isEvening = mode === 'evening';
-
-  document.getElementById('appContent').innerHTML = `
-    ${checklistItems.length > 0 ? `
-    <div class="checklist-card">
-      <div class="checklist-header">
-        <div class="checklist-title">📋 Today's Active Checklist</div>
-        <div class="checklist-progress">${checklistItems.filter(i=>i.done).length}/${checklistItems.length} complete</div>
+function renderProjects() {
+  const el=document.getElementById('projContainer'); if (!el) return;
+  el.innerHTML=projects.map((p,i)=>`
+    <div class="project-item">
+      <div class="project-header"><div class="project-name">${i+1}. ${p.name}</div><div class="project-pct">${p.pct}%</div></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${p.pct}%"></div></div>
+      <textarea class="notes-textarea" placeholder="Notes..." onblur="updateProjNotes(${p.id},this.value)">${p.notes||''}</textarea>
+      <div class="project-controls">
+        ${[0,25,50,75,100].map(pct=>`<button class="pct-btn ${p.pct===pct?'complete-btn':''}" onclick="setProjPct(${p.id},${pct})">${pct===100?'✓ Done':pct+'%'}</button>`).join('')}
       </div>
-      <div class="checklist-items" id="checklistItems"></div>
-      <div class="add-task-row">
-        <input type="text" class="add-task-input" id="newTaskInputForm" placeholder="Add a task..." onkeydown="if(event.key==='Enter')addTaskFromForm()" />
-        <button class="btn-add-task" onclick="addTaskFromForm()">+ Add</button>
-      </div>
-    </div>` : ''}
-    ${renderPushedListHTML()}
-    <div class="mode-toggle">
-      <button class="mode-btn ${mode==='morning'?'active-morning':''}" onclick="setMode('morning')">🌅 Morning Brief</button>
-      <button class="mode-btn ${mode==='evening'?'active-evening':''}" onclick="setMode('evening')">🌙 Evening Shutdown</button>
-    </div>
-    <div class="form">
-      <div class="field">
-        <label>${isEvening ? "📅 Tomorrow's Calendar / Flights" : "📅 Today's Calendar / Flights"}</label>
-        <textarea id="calEvents" rows="3" placeholder="${isEvening ? 'e.g. 0530 show time, 0730 PHL→MIA turn' : 'e.g. 0600 preflight, 0800 DCA→ORD'}"></textarea>
-      </div>
-      <div class="field">
-        <label>${isEvening ? "📋 What Didn't Get Done Today" : "⚡ Today's Tasks & Priorities"}</label>
-        <textarea id="tasks" rows="3" placeholder="${isEvening ? "Items that didn't get done..." : 'e.g. pay invoice, gym, hockey at noon'}"></textarea>
-      </div>
-      ${isEvening ? `<div class="field"><label>✅ What I Accomplished Today</label><textarea id="completed" rows="3" placeholder="What got done today..."></textarea></div>` : ''}
-      <div class="field">
-        <label>🗒️ Additional Context / Notes</label>
-        <textarea id="notes" rows="2" placeholder="Blockers, context, things on your mind..."></textarea>
-      </div>
-      <button class="btn-generate ${mode}" onclick="generateBrief()">
-        ${mode === 'morning' ? '🛫 Generate Morning Brief' : '🛬 Run Shutdown Ritual'}
-      </button>
-    </div>
-    <button class="reset-key" onclick="handleResetKey()">Reset API Key / Sync Settings</button>`;
-
-  if (checklistItems.length > 0) renderChecklistItems();
+    </div>`).join('');
 }
 
-function addTaskFromForm() {
-  const input = document.getElementById('newTaskInputForm');
-  if (!input || !input.value.trim()) return;
-  checklistItems.push({ id: Date.now(), text: input.value.trim(), priority: 'MED', done: false, added: true });
-  saveToCloud();
-  input.value = '';
-  renderForm();
+function setProjPct(id,pct) {
+  const p=projects.find(x=>x.id===id); if(p){p.pct=pct;saveData();renderProjects();}
+}
+function updateProjNotes(id,notes) {
+  const p=projects.find(x=>x.id===id); if(p&&notes!==p.notes){p.notes=notes;saveData();}
+}
+function toggleAddProj() {
+  const f=document.getElementById('addProjForm'); if(f) f.style.display=f.style.display==='none'?'block':'none';
+}
+function saveNewProj() {
+  const name=document.getElementById('newProjName')?.value?.trim();
+  const notes=document.getElementById('newProjNotes')?.value?.trim();
+  if (!name) { alert('Enter a project name.'); return; }
+  projects.push({id:Date.now(),name,pct:0,notes:notes||''});
+  saveData(); toggleAddProj(); renderProjects();
 }
 
-function handleResetKey() {
-  if (confirm('Clear saved API key and sync settings?')) {
-    clearKey();
-    localStorage.removeItem('sb_supa_url');
-    localStorage.removeItem('sb_supa_anon');
-    render();
-  }
-}
-
-// ── GENERATE BRIEF ────────────────────────────────────────
-async function generateBrief() {
-  const calEvents = document.getElementById('calEvents')?.value || '';
-  const tasks = document.getElementById('tasks')?.value || '';
-  const completed = document.getElementById('completed')?.value || '';
-  const notes = document.getElementById('notes')?.value || '';
-  const pushedText = pushedItems.length > 0 ? '\n\nACTIVE PUSHED ITEMS (carrying forward, include relevant ones in checklist):\n' + pushedItems.map(i => `- ${i.text} (pushed ${i.pushCount}x${i.reason ? ', reason: ' + i.reason : ''})`).join('\n') : '';
-
-  lastInputs = { calEvents, tasks, completed, notes };
-
-  const userPrompt = mode === 'morning'
-    ? `Generate my MORNING BRIEF.\n\nCalendar/flights today:\n${calEvents||'None'}\n\nTasks & priorities:\n${tasks||'None'}${pushedText}\n\nNotes:\n${notes||'None'}\n\nAfter the brief, generate the CHECKLIST section.`
-    : `Generate my EVENING SHUTDOWN BRIEF.\n\nAccomplished today:\n${completed||'Not specified'}\n\nDidn't get done:\n${tasks||'None'}${pushedText}\n\nTomorrow's calendar:\n${calEvents||'None'}\n\nNotes:\n${notes||'None'}\n\nAfter the brief, generate the CHECKLIST section for tomorrow's known items.`;
-
-  loading = true; errorMsg = ''; render();
-
-  try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': getKey(),
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-5',
-        max_tokens: 2500,
-        system: SYSTEM_PROMPT,
-        messages: [{ role: 'user', content: userPrompt }]
-      })
-    });
-
-    if (!response.ok) {
-      const errData = await response.json().catch(() => ({}));
-      throw new Error(errData.error?.message || `API error ${response.status}`);
-    }
-
-    const data = await response.json();
-    if (data.error) throw new Error(data.error.message);
-
-    briefText = data.content?.map(b => b.text||'').join('') || '';
-    if (!briefText) throw new Error('Empty response from API. Please try again.');
-
-    // If this was an EVENING brief, perform end-of-day reset BEFORE loading new checklist
-    if (mode === 'evening') {
-      performEndOfDayReset();
-    }
-
-    const parsed = parseChecklist(briefText);
-    if (parsed.length > 0) { checklistItems = parsed; }
-    saveToCloud();
-
-    loading = false; generated = true; render();
-
-  } catch(e) {
-    loading = false;
-    errorMsg = e.message.includes('invalid_api_key') || e.message.includes('authentication')
-      ? 'Invalid API key. Tap "Reset API Key" below and re-enter your key.'
-      : e.message.includes('rate_limit') ? 'Rate limit hit. Wait 30 seconds and try again.'
-      : e.message.includes('overloaded') ? 'API is busy. Wait a moment and try again.'
-      : `${e.message}. Check your connection and try again.`;
-    render();
-  }
-}
-
-function retryGenerate() {
-  errorMsg = ''; generated = false; render();
-  setTimeout(() => {
-    if (document.getElementById('calEvents')) document.getElementById('calEvents').value = lastInputs.calEvents || '';
-    if (document.getElementById('tasks')) document.getElementById('tasks').value = lastInputs.tasks || '';
-    if (document.getElementById('completed')) document.getElementById('completed').value = lastInputs.completed || '';
-    if (document.getElementById('notes')) document.getElementById('notes').value = lastInputs.notes || '';
-  }, 50);
-}
-
-function regenerate() { generated = false; briefText = ''; render(); setTimeout(() => generateBrief(), 100); }
-function resetForm() { generated = false; briefText = ''; errorMsg = ''; render(); }
-
-// ── INIT ──────────────────────────────────────────────────
-async function init() {
-  const hasSupa = initSupabase();
-  if (hasSupa) { await loadFromCloud(); } else { loadLocal(); }
-  render();
-}
-
+// ── START ──────────────────────────────────────────────────────────────
 init();
 </script>
 </body>
